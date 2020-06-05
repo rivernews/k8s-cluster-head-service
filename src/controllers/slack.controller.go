@@ -48,8 +48,7 @@ func SlackController(c *gin.Context) {
 	if requestFromSlackToken == slackRequest.Token {
 		params := url.Values{}
 		params.Add("circle-token", circleCiToken)
-		// circleCiRequestURL, _ := url.Parse("https://circleci.com/api/v2/project/github/rivernews/iriversland2-kubernetes/pipeline")
-		// circleCiRequestURL.RawQuery = params.Encode()
+
 		circleCIRequest := circleCIRequestType{
 			"release",
 		}
@@ -68,7 +67,12 @@ func SlackController(c *gin.Context) {
 		urlBuilder.WriteString("https://circleci.com/api/v2/project/")
 		urlBuilder.WriteString(encodedProjectSlug)
 		urlBuilder.WriteString("/pipeline")
-		req, err := http.NewRequest("POST", urlBuilder.String(), buf)
+		log.Printf("requesting circle ci at %s", urlBuilder.String())
+
+		circleCiRequestURL, _ := url.Parse(urlBuilder.String())
+		circleCiRequestURL.RawQuery = params.Encode()
+
+		req, err := http.NewRequest("POST", circleCiRequestURL.String(), buf)
 		req.Header = headers
 		client := &http.Client{}
 		res, err := client.Do(req)
