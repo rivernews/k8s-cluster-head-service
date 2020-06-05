@@ -63,7 +63,12 @@ func SlackController(c *gin.Context) {
 			"x-attribution-actor-id": []string{"string"},
 		}
 
-		req, err := http.NewRequest("POST", "https://circleci.com/api/v2/project/github/rivernews/iriversland2-kubernetes/pipeline", buf)
+		encodedProjectSlug := url.QueryEscape("github/rivernews/iriversland2-kubernetes")
+		var urlBuilder strings.Builder
+		urlBuilder.WriteString("https://circleci.com/api/v2/project/")
+		urlBuilder.WriteString(encodedProjectSlug)
+		urlBuilder.WriteString("/pipeline")
+		req, err := http.NewRequest("POST", urlBuilder.String(), buf)
 		req.Header = headers
 		client := &http.Client{}
 		res, err := client.Do(req)
