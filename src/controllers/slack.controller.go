@@ -34,11 +34,8 @@ func SlackController(c *gin.Context) {
 	if err := c.ShouldBindBodyWith(&slackRequest, binding.JSON); err != nil {
 		log.Printf("Cannot parse slack request, ignored: %s", err)
 
-		requestToken, _ := c.GetPostForm("token")
-		log.Printf("GetPostForm(): %s", requestToken)
-
 		body, _ := ioutil.ReadAll(c.Request.Body)
-		log.Printf("slack request body: %s", body)
+		log.Printf("slack request body: %s", string(body))
 
 		c.Status(http.StatusBadRequest)
 		return
