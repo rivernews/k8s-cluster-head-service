@@ -13,6 +13,15 @@ Head service for scaling up and down k8s cluster, and managing services and rout
 1. The app can be accessed at `https://k8s-cluster-head-service.herokuapp.com/`
 
 # Reference
+
+## Golang
+
+### Exporting func or variable 
+
+In order to export this function you need to capitalize it
+https://tour.golang.org/basics/3
+
+## Kickstart golang
 - This github repo: https://github.com/rivernews/k8s-cluster-head-service
 
 Getting started with a golang project
