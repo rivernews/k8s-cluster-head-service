@@ -15,22 +15,26 @@ import (
 )
 
 type slackRequestType struct {
-	Token string `form:"token" json:"token"`
+	Token       string `form:"token"`
+	TriggerWord string `form:"trigger_word"`
 }
 
 type circleCIRequestType struct {
 	Branch string `json:"branch"`
 }
 
-var requestFromSlackToken, requestFromSlackTokenExists = os.LookupEnv("REQUEST_FROM_SLACK_TOKEN")
+var requestFromSlackTokenCredential, requestFromSlackTokenCredentialExists = os.LookupEnv("REQUEST_FROM_SLACK_TOKEN")
 var circleCiToken, _ = os.LookupEnv("CIRCLECI_TOKEN")
 
 // in order to export this function you need to capitalize it
 // https://tour.golang.org/basics/3
+
+// SlackController port slack command to circle CI API
+// https://circleci.com/docs/api/v2/?shell#trigger-a-new-pipeline
 func SlackController(c *gin.Context) {
 	log.Println("in slack controller")
 
-	if !requestFromSlackTokenExists {
+	if !requestFromSlackTokenCredentialExists {
 		log.Panic(errors.New("slack token not configured"))
 		c.JSON(http.StatusBadRequest, gin.H{
 			"reason": "slack auth token not set",
@@ -45,17 +49,21 @@ func SlackController(c *gin.Context) {
 		return
 	}
 
-	if requestFromSlackToken == slackRequest.Token {
+	if requestFromSlackTokenCredential == slackRequest.Token {
 		// prepare credentials via querystring
 		params := url.Values{}
 		params.Add("circle-token", circleCiToken)
 
 		// prepare post data
-		circleCIRequest := circleCIRequestType{
-			"release",
+		branch := "master"
+		if slackRequest.TriggerWord == "kkk" {
+			branch = "release"
+		} else if slackRequest.TriggerWord == "ddd" {
+			branch = "destroy-release"
 		}
-		buf := new(bytes.Buffer)
-		json.NewEncoder(buf).Encode(circleCIRequest)
+		circleCIRequest := circleCIRequestType{branch}
+		circleCIPOSTRequestFormBuf := new(bytes.Buffer)
+		json.NewEncoder(circleCIPOSTRequestFormBuf).Encode(circleCIRequest)
 
 		// prepare headers
 		headers := map[string][]string{
@@ -80,7 +88,7 @@ func SlackController(c *gin.Context) {
 		circleCiRequestURL.RawQuery = params.Encode()
 
 		// append request config and make request
-		req, err := http.NewRequest("POST", circleCiRequestURL.String(), buf)
+		req, err := http.NewRequest("POST", circleCiRequestURL.String(), circleCIPOSTRequestFormBuf)
 		req.Header = headers
 		client := &http.Client{}
 		res, err := client.Do(req)
