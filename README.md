@@ -1,9 +1,16 @@
 # k8s-cluster-head-service
 Head service for scaling up and down k8s cluster, and managing services and routine on the cluster. This project serves as a way to get myself familiar with golang.
 
-## How to run
+## How to run locally
 1. `go run src/server.go`, or after `air` is configured, run `air`.
 1. Open browser at `http://0.0.0.0:3010`
+
+## How to deploy
+1. Install Heroku CLI, and run `heroku login`
+1. `heroku create k8s-cluster-head-service --manifest` ([Heroku doc](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml#creating-your-app-from-setup)), you'll get `https://k8s-cluster-head-service.herokuapp.com/ | https://git.heroku.com/k8s-cluster-head-service.git`
+1. Commit git changes, including `heroku.yml`
+1. Push to heroku remote `git push heroku master`
+1. The app can be accessed at `https://k8s-cluster-head-service.herokuapp.com/`
 
 # Reference
 - This github repo: https://github.com/rivernews/k8s-cluster-head-service
@@ -21,3 +28,5 @@ Getting started with a golang project
 
 Learning to write go code
 - Basic control flow & playground: https://tour.golang.org/list
+
+Deploying to Heroku
