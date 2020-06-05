@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,10 +58,17 @@ func SlackController(c *gin.Context) {
 		}
 		buf := new(bytes.Buffer)
 		json.NewEncoder(buf).Encode(circleCIRequest)
-		http.Post(circleCiRequestURL.String(), "application/json", buf)
+		res, err := http.Post(circleCiRequestURL.String(), "application/json", buf)
 
+		var slackMessage strings.Builder
+		slackMessage.WriteString("K8s header service triggered circle ci job, response:\n```")
+		bytesContent, _ := ioutil.ReadAll(res.Body)
+		slackMessage.WriteString(string(bytesContent))
+		slackMessage.WriteString("```\nAny error:\n```")
+		slackMessage.WriteString(err.Error())
+		slackMessage.WriteString("```\n")
 		c.JSON(http.StatusOK, gin.H{
-			"text": "\n```K8s header service response: received!```\n",
+			"text": slackMessage.String(),
 		})
 		return
 	}
