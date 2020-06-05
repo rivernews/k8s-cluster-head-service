@@ -119,7 +119,15 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 	// slackMessage.WriteString(projectDashboardURL)
 	// slackMessage.WriteString("|Project dashboard>.")
 
-	respondSlackMessage := utilities.Fetch(utilities.FetchOption{
+	var responseMessage strings.Builder
+	if branch == "release" {
+		responseMessage.WriteString("Provisioning kubernetes requested.\n")
+	} else if branch == "destroy-release" {
+		responseMessage.WriteString("Destroying kubernetes requested.\n")
+	} else {
+		responseMessage.WriteString("Verify kubernetes requested.\n")
+	}
+	fetchResultMessage := utilities.Fetch(utilities.FetchOption{
 		Method:  "POST",
 		URL:     urlBuilder.String(),
 		Headers: headers,
@@ -130,9 +138,10 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 			"branch": branch,
 		},
 	})
+	responseMessage.WriteString(fetchResultMessage)
 
 	c.JSON(http.StatusOK, gin.H{
-		"text": respondSlackMessage,
+		"text": responseMessage,
 	})
 
 	return
@@ -151,7 +160,7 @@ func travisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest slackRequestTyp
 	urlBuilder.WriteString(encodedProjectSlug)
 	urlBuilder.WriteString("/requests")
 
-	respondSlackMessage := utilities.Fetch(utilities.FetchOption{
+	fetchedMessage := utilities.Fetch(utilities.FetchOption{
 		Method: "POST",
 		URL:    urlBuilder.String(),
 		Headers: map[string][]string{
@@ -164,6 +173,10 @@ func travisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest slackRequestTyp
 			"branch": "release",
 		},
 	})
+
+	var respondSlackMessage strings.Builder
+	respondSlackMessage.WriteString("Provision SLK requested.\n")
+	respondSlackMessage.WriteString(fetchedMessage)
 
 	c.JSON(http.StatusOK, gin.H{
 		"text": respondSlackMessage,
