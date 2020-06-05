@@ -10,7 +10,7 @@ import (
 )
 
 type slackRequestType struct {
-	Token string `json:"token"`
+	Token string `form:"token" json:"token"`
 }
 
 var requestFromSlackToken, requestFromSlackTokenExists = os.LookupEnv("REQUEST_FROM_SLACK_TOKEN")
@@ -33,14 +33,14 @@ func SlackController(c *gin.Context) {
 	}
 
 	slackRequest := slackRequestType{}
-	// if err := c.ShouldBindBodyWith(&slackRequest, binding.MIMEPOSTForm); err != nil {
-	// 	log.Printf("Cannot parse slack request, ignored: %s", err)
-	// 	c.Status(http.StatusBadRequest)
-	// 	return
-	// }
-	channelName := c.PostForm("channel_name")
-	log.Printf("channelName: %s", channelName)
-	return
+	if err := c.ShouldBind(&slackRequest); err != nil {
+		log.Printf("Cannot parse slack request, ignored: %s", err)
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	// channelName := c.PostForm("channel_name")
+	// log.Printf("channelName: %s", channelName)
+	// return
 
 	log.Printf("slack token received!")
 	if requestFromSlackToken == slackRequest.Token {
