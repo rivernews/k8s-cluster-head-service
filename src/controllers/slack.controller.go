@@ -19,8 +19,7 @@ type slackRequestType struct {
 }
 
 type circleCIRequestType struct {
-	ProjectSlug string `json:"project-slug"`
-	Branch      string `json:"branch"`
+	Branch string `json:"branch"`
 }
 
 var requestFromSlackToken, requestFromSlackTokenExists = os.LookupEnv("REQUEST_FROM_SLACK_TOKEN")
@@ -49,16 +48,25 @@ func SlackController(c *gin.Context) {
 	if requestFromSlackToken == slackRequest.Token {
 		params := url.Values{}
 		params.Add("circle-token", circleCiToken)
-		circleCiRequestURL, _ := url.Parse("https://circleci.com/api/v2/project")
-		circleCiRequestURL.RawQuery = params.Encode()
-
+		// circleCiRequestURL, _ := url.Parse("https://circleci.com/api/v2/project/github/rivernews/iriversland2-kubernetes/pipeline")
+		// circleCiRequestURL.RawQuery = params.Encode()
 		circleCIRequest := circleCIRequestType{
-			"github/rivernews/iriversland2-kubernetes",
 			"release",
 		}
 		buf := new(bytes.Buffer)
 		json.NewEncoder(buf).Encode(circleCIRequest)
-		res, err := http.Post(circleCiRequestURL.String(), "application/json", buf)
+
+		headers := map[string][]string{
+			"Content-Type":           []string{"application/json"},
+			"Accept":                 []string{"application/json"},
+			"x-attribution-login":    []string{"string"},
+			"x-attribution-actor-id": []string{"string"},
+		}
+
+		req, err := http.NewRequest("POST", "https://circleci.com/api/v2/project/github/rivernews/iriversland2-kubernetes/pipeline", buf)
+		req.Header = headers
+		client := &http.Client{}
+		res, err := client.Do(req)
 
 		var slackMessage strings.Builder
 		slackMessage.WriteString("K8s header service triggered circle ci job, response:\n```\n")
@@ -66,7 +74,10 @@ func SlackController(c *gin.Context) {
 		slackMessage.WriteString(string(bytesContent))
 		slackMessage.WriteString("\n```\nAny error:\n```\n")
 		if err != nil {
+			slackMessage.WriteString("🔴 ")
 			slackMessage.WriteString(err.Error())
+		} else {
+			slackMessage.WriteString("🟢 No error")
 		}
 		slackMessage.WriteString("\n```\n")
 		c.JSON(http.StatusOK, gin.H{
