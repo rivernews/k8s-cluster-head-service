@@ -23,6 +23,18 @@ type circleCIRequestType struct {
 	Branch string `json:"branch"`
 }
 
+type circleCIPipelineType struct {
+	ID        string `json:"id"`
+	Number    int    `json:"number"`
+	State     string `json:"state"`
+	CreatedAt string `json:"created_at"`
+}
+
+type circleCIPipelineListResponseType struct {
+	NextPageToken string                 `json:"next_page_token"`
+	Items         []circleCIPipelineType `json:"items[]"`
+}
+
 var requestFromSlackTokenCredential, requestFromSlackTokenCredentialExists = os.LookupEnv("REQUEST_FROM_SLACK_TOKEN")
 var circleCiToken, _ = os.LookupEnv("CIRCLECI_TOKEN")
 
@@ -52,7 +64,12 @@ func SlackController(c *gin.Context) {
 	}
 
 	if requestFromSlackTokenCredential == parsedSlackRequest.Token {
-		circleCITriggerK8sClusterHelper(c, parsedSlackRequest)
+		// TODO: cancel job
+		if parsedSlackRequest.TriggerWord == "ppp" {
+			// TODO: poll job status
+		} else {
+			circleCITriggerK8sClusterHelper(c, parsedSlackRequest)
+		}
 	}
 
 	c.JSON(http.StatusBadRequest, gin.H{
