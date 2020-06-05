@@ -32,7 +32,7 @@ func SlackController(c *gin.Context) {
 		return
 	}
 
-	// slackRequest := slackRequestType{}
+	slackRequest := slackRequestType{}
 	// if err := c.ShouldBindBodyWith(&slackRequest, binding.MIMEPOSTForm); err != nil {
 	// 	log.Printf("Cannot parse slack request, ignored: %s", err)
 	// 	c.Status(http.StatusBadRequest)
