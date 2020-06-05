@@ -22,7 +22,7 @@ func SlackController(c *gin.Context) {
 	if !requestFromSlackTokenExists {
 		log.Panic(errors.New("slack token not configured"))
 		c.JSON(http.StatusBadRequest, gin.H{
-			"reason": "slack auth token not set"
+			"reason": "slack auth token not set",
 		})
 	}
 
@@ -30,10 +30,11 @@ func SlackController(c *gin.Context) {
 	if err := c.ShouldBindBodyWith(&slackRequest, binding.JSON); err == nil {
 		log.Printf("slack token: %s", slackRequest.Token)
 
-		c.JSON(http.StatusOK, gin.H{
-			"message": "ok",
-			"text":    "received!",
-		})
+		if requestFromSlackToken == slackRequest.Token {
+			c.JSON(http.StatusOK, gin.H{
+				"text": "K8s header service response:\n```received!```\n",
+			})
+		}
 	}
 
 	log.Println("cannot parse slack request, ignored")
