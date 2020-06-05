@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -32,8 +33,13 @@ func SlackController(c *gin.Context) {
 	slackRequest := slackRequestType{}
 	if err := c.ShouldBindBodyWith(&slackRequest, binding.JSON); err != nil {
 		log.Printf("Cannot parse slack request, ignored: %s", err)
-		requestToken, exists := c.GetPostForm("token")
-		log.Printf("GetPostForm(): %s, %s", requestToken, exists)
+
+		requestToken, _ := c.GetPostForm("token")
+		log.Printf("GetPostForm(): %s", requestToken)
+
+		body, _ := ioutil.ReadAll(c.Request.Body)
+		log.Printf("slack request body: %s", body)
+
 		c.Status(http.StatusBadRequest)
 		return
 	}
