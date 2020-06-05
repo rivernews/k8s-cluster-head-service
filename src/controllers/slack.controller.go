@@ -22,6 +22,10 @@ var requestFromSlackToken, requestFromSlackTokenExists = os.LookupEnv("REQUEST_F
 func SlackController(c *gin.Context) {
 	log.Println("in slack controller")
 
+	body, _ := ioutil.ReadAll(c.Request.Body)
+	log.Printf("slack request body: %s", string(body))
+	return
+
 	if !requestFromSlackTokenExists {
 		log.Panic(errors.New("slack token not configured"))
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -33,10 +37,6 @@ func SlackController(c *gin.Context) {
 	slackRequest := slackRequestType{}
 	if err := c.ShouldBindBodyWith(&slackRequest, binding.JSON); err != nil {
 		log.Printf("Cannot parse slack request, ignored: %s", err)
-
-		body, _ := ioutil.ReadAll(c.Request.Body)
-		log.Printf("slack request body: %s", string(body))
-
 		c.Status(http.StatusBadRequest)
 		return
 	}
