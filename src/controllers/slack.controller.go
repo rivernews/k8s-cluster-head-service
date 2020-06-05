@@ -30,16 +30,21 @@ func SlackController(c *gin.Context) {
 	}
 
 	slackRequest := slackRequestType{}
-	if err := c.ShouldBindBodyWith(&slackRequest, binding.JSON); log.Println(err); err == nil {
-		log.Printf("slack token received!")
-
-		if requestFromSlackToken == slackRequest.Token {
-			c.JSON(http.StatusOK, gin.H{
-				"text": "K8s header service response:\n```received!```\n",
-			})
-			return
-		}
+	if err := c.ShouldBindBodyWith(&slackRequest, binding.JSON); err != nil {
+		log.Printf("Cannot parse slack request, ignored: %s", err)
+		c.Status(http.StatusBadRequest)
+		return
 	}
 
-	log.Println("cannot parse slack request, ignored")
+	log.Printf("slack token received!")
+	if requestFromSlackToken == slackRequest.Token {
+		c.JSON(http.StatusOK, gin.H{
+			"text": "K8s header service response:\n```received!```\n",
+		})
+		return
+	}
+
+	c.JSON(http.StatusBadRequest, gin.H{
+		"reason": "auth failed",
+	})
 }
