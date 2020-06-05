@@ -24,9 +24,15 @@ Getting started with a golang project
 - How to use `go mod init`: https://medium.com/@yunskilic/managing-dependencies-with-go-modules-4a6111d641cc
 - Golang module v2: https://blog.golang.org/v2-go-modules
 - More commands surrounding go modular: https://blog.golang.org/using-go-modules
-- Fiber: https://github.com/gofiber/fiber
 
 Learning to write go code
 - Basic control flow & playground: https://tour.golang.org/list
 
 Deploying to Heroku
+- Heroku doc: https://devcenter.heroku.com/articles/build-docker-images-heroku-yml#creating-your-app-from-setup
+- Using docker container to deploy: https://dev.to/ilyakaznacheev/setup-build-automate-deploy-a-dockerized-app-to-heroku-fast-167
+
+Web framework
+- Line up stats - compare their stars!: https://github.com/mingrammer/go-web-framework-stars
+- The most popular - gin: https://github.com/gin-gonic/gin
+- Fiber: https://github.com/gofiber/fiber
