@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/utilities"
@@ -18,9 +17,6 @@ type slackRequestType struct {
 	TriggerWord string `form:"trigger_word"`
 }
 
-var requestFromSlackTokenCredential, requestFromSlackTokenCredentialExists = os.LookupEnv("REQUEST_FROM_SLACK_TOKEN")
-var circleCiToken, _ = os.LookupEnv("CIRCLECI_TOKEN")
-
 // SlackController port slack command to circle CI API
 //
 // Projec status
@@ -31,7 +27,7 @@ var circleCiToken, _ = os.LookupEnv("CIRCLECI_TOKEN")
 func SlackController(c *gin.Context) {
 	log.Println("in slack controller")
 
-	if !requestFromSlackTokenCredentialExists {
+	if !utilities.RequestFromSlackTokenCredentialExists {
 		log.Panic(errors.New("slack token not configured"))
 		c.JSON(http.StatusBadRequest, gin.H{
 			"reason": "slack auth token not set",
@@ -46,7 +42,7 @@ func SlackController(c *gin.Context) {
 		return
 	}
 
-	if requestFromSlackTokenCredential == parsedSlackRequest.Token {
+	if utilities.RequestFromSlackTokenCredential == parsedSlackRequest.Token {
 		// TODO: cancel job
 		if parsedSlackRequest.TriggerWord == "ppp" {
 			// TODO: poll job status
@@ -123,13 +119,12 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 	// slackMessage.WriteString(projectDashboardURL)
 	// slackMessage.WriteString("|Project dashboard>.")
 
-	slackMessage := ""
-	utilities.Fetch(utilities.FetchOption{
+	respondSlackMessage := utilities.Fetch(utilities.FetchOption{
 		Method:  "POST",
 		URL:     urlBuilder.String(),
 		Headers: headers,
 		QueryParams: map[string]string{
-			"circle-token": circleCiToken,
+			"circle-token": utilities.CircleCiToken,
 		},
 		PostData: map[string]string{
 			"branch": branch,
@@ -137,12 +132,40 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 	})
 
 	c.JSON(http.StatusOK, gin.H{
-		"text": slackMessage,
+		"text": respondSlackMessage,
 	})
 
 	return
 }
 
-func travisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest slackRequestType) {
+var travisAPIBaseURL = "https://api.travis-ci.com"
 
+func travisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest slackRequestType) {
+	encodedProjectSlug := url.QueryEscape("rivernews/slack-middleware-server")
+
+	// build url
+	var urlBuilder strings.Builder
+	urlBuilder.WriteString(travisAPIBaseURL)
+	// endpoint
+	urlBuilder.WriteString("/repo/")
+	urlBuilder.WriteString(encodedProjectSlug)
+	urlBuilder.WriteString("/requests")
+
+	respondSlackMessage := utilities.Fetch(utilities.FetchOption{
+		Method: "POST",
+		URL:    urlBuilder.String(),
+		Headers: map[string][]string{
+			"Content-Type":       {"application/json"},
+			"Accept":             {"application/json"},
+			"Travis-API-Version": {"3"},
+			"Authorization":      {"token " + utilities.TravisCIToken},
+		},
+		PostData: map[string]string{
+			"branch": "release",
+		},
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"text": respondSlackMessage,
+	})
 }

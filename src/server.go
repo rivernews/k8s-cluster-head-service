@@ -1,16 +1,22 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/controllers"
+	"github.com/rivernews/k8s-cluster-head-service/v2/src/utilities"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	if !checkAppConfigurationOK() {
+		return
+	}
+
 	router := gin.Default()
 
 	// Default page
@@ -51,4 +57,25 @@ func main() {
 
 	// Listen and serve on 0.0.0.0:8080
 	router.Run(address.String())
+}
+
+func checkAppConfigurationOK() bool {
+	log.Println("Checking app configuration...")
+
+	if !utilities.RequestFromSlackTokenCredentialExists {
+		log.Fatalln("Outgoing slack webhook token is not configured")
+		return false
+	}
+
+	if !utilities.CircleCiTokenExists {
+		log.Fatalln("CircleCI token is not configured")
+		return false
+	}
+
+	if !utilities.TravisCITokenExists {
+		log.Fatalln("TravisCI token is not configured")
+		return false
+	}
+
+	return true
 }
