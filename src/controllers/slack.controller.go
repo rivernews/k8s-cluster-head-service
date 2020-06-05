@@ -30,7 +30,7 @@ func SlackController(c *gin.Context) {
 	}
 
 	slackRequest := slackRequestType{}
-	if err := c.ShouldBindBodyWith(&slackRequest, binding.JSON); err == nil {
+	if err := c.ShouldBindBodyWith(&slackRequest, binding.JSON); log.Println(err); err == nil {
 		log.Printf("slack token received!")
 
 		if requestFromSlackToken == slackRequest.Token {
