@@ -9,7 +9,9 @@
 		"terminal.integrated.shell.linux": "/usr/bin/zsh",
 		"workbench.panel.defaultLocation": "bottom",
 		"comments.openPanel": "neverOpen",
-		"terminal.integrated.fontFamily": "MesloLGS NF, Meslo LG M for Powerline, Hasklig, Monaco"
+		"terminal.integrated.fontFamily": "MesloLGS NF, Meslo LG M for Powerline, Hasklig, Monaco",
+
+		"go.useLanguageServer": true
 	},
 
 	// Use 'appPort' to create a container with published ports. If the port isn't working, be sure
@@ -20,6 +22,7 @@
 
 	// Uncomment the next line to run commands after the container is created.
 	"postCreateCommand": [
+		"go mod download",
 	],
 	
 	// "workspaceFolder": "/usr/src",
@@ -37,6 +40,7 @@
 	"extensions": [
 		"esbenp.prettier-vscode",
 		"ms-azuretools.vscode-docker",
+		"ms-vscode.go"
 
 		// got stuck when installing
 		// "mauve.terraform"

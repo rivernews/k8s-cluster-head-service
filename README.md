@@ -2,11 +2,13 @@
 Head service for scaling up and down k8s cluster, and managing services and routine on the cluster. This project serves as a way to get myself familiar with golang.
 
 ## How to run
-1. `go run src/server.go`
+1. `go run src/server.go`, or after `air` is configured, run `air`.
 1. Open browser at `http://0.0.0.0:3010`
 
 # Reference
 - This github repo: https://github.com/rivernews/k8s-cluster-head-service
+
+Getting started with a golang project
 - Setup golang for local development: https://www.digitalocean.com/community/tutorials/how-to-install-go-and-set-up-a-local-programming-environment-on-macos
 - Golang project structure: https://github.com/golang-standards/project-layout
 - What is `GOPATH` and `GOROOT`? https://stackoverflow.com/questions/7970390/what-should-be-the-values-of-gopath-and-goroot/7971481#7971481
@@ -16,3 +18,6 @@ Head service for scaling up and down k8s cluster, and managing services and rout
 - Golang module v2: https://blog.golang.org/v2-go-modules
 - More commands surrounding go modular: https://blog.golang.org/using-go-modules
 - Fiber: https://github.com/gofiber/fiber
+
+Learning to write go code
+- Basic control flow & playground: https://tour.golang.org/list
