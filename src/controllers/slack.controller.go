@@ -59,10 +59,6 @@ func SlackController(c *gin.Context) {
 }
 
 func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackRequestType) {
-	// prepare credentials via querystring
-	// params := url.Values{}
-	// params.Add("circle-token", circleCiToken)
-
 	// prepare post data
 	branch := "master"
 	if parsedSlackRequest.TriggerWord == "kkk" {
@@ -70,9 +66,6 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 	} else if parsedSlackRequest.TriggerWord == "ddd" {
 		branch = "destroy-release"
 	}
-	// circleCIRequest := types.CircleCIRequestType{Branch: branch}
-	// circleCIPOSTRequestFormBuf := new(bytes.Buffer)
-	// json.NewEncoder(circleCIPOSTRequestFormBuf).Encode(circleCIRequest)
 
 	// prepare headers
 	headers := map[string][]string{
@@ -92,33 +85,7 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 	urlBuilder.WriteString("/pipeline")
 	log.Printf("requesting circle ci at %s", urlBuilder.String())
 
-	// add credentials by querystring
-	// circleCiRequestURL, _ := url.Parse(urlBuilder.String())
-	// circleCiRequestURL.RawQuery = params.Encode()
-
-	// append request config and make request
-	// req, err := http.NewRequest("POST", circleCiRequestURL.String(), circleCIPOSTRequestFormBuf)
-	// req.Header = headers
-	// client := &http.Client{}
-	// res, err := client.Do(req)
-
-	// log response
-	// var slackMessage strings.Builder
-	// slackMessage.WriteString("K8s header service triggered circle ci job, response:\n```\n")
-	// bytesContent, _ := ioutil.ReadAll(res.Body)
-	// slackMessage.WriteString(string(bytesContent))
-	// slackMessage.WriteString("\n```\nAny error:\n```\n")
-	// if err != nil {
-	// 	slackMessage.WriteString("🔴 ")
-	// 	slackMessage.WriteString(err.Error())
-	// } else {
-	// 	slackMessage.WriteString("🟢 No error")
-	// }
-	// slackMessage.WriteString("\n```\n<")
-	// projectDashboardURL := "https://app.circleci.com/pipelines/github/rivernews/iriversland2-kubernetes"
-	// slackMessage.WriteString(projectDashboardURL)
-	// slackMessage.WriteString("|Project dashboard>.")
-
+	// make request
 	var responseMessage strings.Builder
 	if branch == "release" {
 		responseMessage.WriteString("Provisioning kubernetes requested.\n")
