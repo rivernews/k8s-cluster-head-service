@@ -17,6 +17,10 @@ func main() {
 		return
 	}
 
+	if !utilities.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	router := gin.Default()
 
 	// Default page
@@ -56,6 +60,7 @@ func main() {
 	address.WriteString(port)
 
 	// Listen and serve on 0.0.0.0:8080
+	log.Println("Start listening on " + address.String())
 	router.Run(address.String())
 }
 
