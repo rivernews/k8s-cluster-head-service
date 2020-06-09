@@ -1,8 +1,12 @@
 package types
 
+type CircleCIKubernetesClusterProjectPipelineParameters struct {
+	DropletSize string `json:"kubernetes-cluster-droplet-size"`
+}
+
 type CircleCIRequestType struct {
-	Branch  string            `json:"branch"`
-	EnvVars map[string]string `json:"parameters"`
+	Branch     string                                             `json:"branch"`
+	Parameters CircleCIKubernetesClusterProjectPipelineParameters `json:"parameters"`
 }
 
 type CircleCIPipelineType struct {

@@ -26,6 +26,9 @@ type slackRequestType struct {
 //
 // API doc
 // https://circleci.com/docs/api/v2/?shell#trigger-a-new-pipeline
+//
+// Pipeline parameter doc
+// https://github.com/CircleCI-Public/api-preview-docs/blob/master/docs/pipeline-parameters.md
 func SlackController(c *gin.Context) {
 	log.Println("in slack controller")
 
@@ -82,8 +85,6 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 	} else if parsedSlackRequest.TriggerWord == "ddd" {
 		branch = "destroy-release"
 	}
-	envVars := map[string]string{}
-	envVars["TF_VAR_droplet_size"] = dropletSize
 
 	// prepare headers
 	headers := map[string][]string{
@@ -120,8 +121,10 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 			"circle-token": utilities.CircleCiToken,
 		},
 		PostData: types.CircleCIRequestType{
-			Branch:  branch,
-			EnvVars: envVars,
+			Branch: branch,
+			Parameters: types.CircleCIKubernetesClusterProjectPipelineParameters{
+				DropletSize: dropletSize,
+			},
 		},
 	})
 	responseMessage.WriteString(fetchResultMessage)
