@@ -1,7 +1,8 @@
 package types
 
 type CircleCIRequestType struct {
-	Branch string `json:"branch"`
+	Branch  string            `json:"branch"`
+	EnvVars map[string]string `json:"parameters"`
 }
 
 type CircleCIPipelineType struct {

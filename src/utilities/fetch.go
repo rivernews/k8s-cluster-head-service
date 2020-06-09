@@ -12,7 +12,7 @@ import (
 // FetchOption - args for method `Fetch`
 type FetchOption struct {
 	QueryParams map[string]string
-	PostData    map[string]string
+	PostData    interface{}
 	Headers     map[string][]string
 	URL         string
 	Method      string
@@ -32,12 +32,14 @@ func Fetch(option FetchOption) string {
 	requestURL.RawQuery = params.Encode()
 
 	// prepare post data
-	postDataMap := map[string]string{}
-	if option.PostData != nil {
-		postDataMap = option.PostData
-	}
 	postDataBuffer := new(bytes.Buffer)
-	json.NewEncoder(postDataBuffer).Encode(postDataMap)
+	if option.PostData != nil {
+		postDataMap := option.PostData
+		json.NewEncoder(postDataBuffer).Encode(postDataMap)
+	} else {
+		postDataMap := map[string]string{}
+		json.NewEncoder(postDataBuffer).Encode(postDataMap)
+	}
 
 	// prepare headers
 	headers := map[string][]string{}

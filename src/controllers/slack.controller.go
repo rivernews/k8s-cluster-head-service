@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/rivernews/k8s-cluster-head-service/v2/src/types"
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/utilities"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,7 @@ import (
 type slackRequestType struct {
 	Token       string `form:"token"`
 	TriggerWord string `form:"trigger_word"`
+	Text        string `form:"text"`
 }
 
 // SlackController port slack command to circle CI API
@@ -59,6 +61,20 @@ func SlackController(c *gin.Context) {
 }
 
 func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackRequestType) {
+	// parse slack command
+	fullCommand := strings.TrimSpace(parsedSlackRequest.Text)
+	fullCommand = strings.ToLower(fullCommand)
+	commandTokens := strings.Split(fullCommand, ":")
+	// parse dropletSize
+	dropletSize := utilities.KubernetesClusterDefaultDropletSize
+	if len(commandTokens) > 1 {
+		if commandTokens[1] == "m" {
+			dropletSize = utilities.MediumDroplet
+		} else if commandTokens[1] == "s" {
+			dropletSize = utilities.SmallDroplet
+		}
+	}
+
 	// prepare post data
 	branch := "master"
 	if parsedSlackRequest.TriggerWord == "kkk" {
@@ -66,6 +82,8 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 	} else if parsedSlackRequest.TriggerWord == "ddd" {
 		branch = "destroy-release"
 	}
+	envVars := map[string]string{}
+	envVars["TF_VAR_droplet_size"] = dropletSize
 
 	// prepare headers
 	headers := map[string][]string{
@@ -101,8 +119,9 @@ func circleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest slackReq
 		QueryParams: map[string]string{
 			"circle-token": utilities.CircleCiToken,
 		},
-		PostData: map[string]string{
-			"branch": branch,
+		PostData: types.CircleCIRequestType{
+			Branch:  branch,
+			EnvVars: envVars,
 		},
 	})
 	responseMessage.WriteString(fetchResultMessage)
