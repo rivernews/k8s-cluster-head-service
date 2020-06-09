@@ -25,6 +25,7 @@ func main() {
 
 	// Default page
 	router.GET("/", func(c *gin.Context) {
+		utilities.SendSlackMessage("haha")
 		c.JSON(http.StatusOK, gin.H{
 			"message": "ok",
 		})
@@ -32,7 +33,7 @@ func main() {
 
 	// Slack routes
 	slackRoutes := router.Group("/slack")
-	slackRoutes.POST("provision", controllers.SlackController)
+	slackRoutes.POST("provision", controllers.SlackCommandController)
 
 	// Protected routes
 
@@ -79,6 +80,11 @@ func checkAppConfigurationOK() bool {
 
 	if !utilities.TravisCITokenExists {
 		log.Fatalln("TravisCI token is not configured")
+		return false
+	}
+
+	if !utilities.SendSlackURLExists {
+		log.Fatalln("Send slack URL is not configured")
 		return false
 	}
 

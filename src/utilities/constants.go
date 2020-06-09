@@ -6,6 +6,7 @@ import (
 )
 
 var RequestFromSlackTokenCredential, RequestFromSlackTokenCredentialExists = os.LookupEnv("REQUEST_FROM_SLACK_TOKEN")
+var SendSlackURL, SendSlackURLExists = os.LookupEnv("SLACK_INCOMING_URL")
 var CircleCiToken, CircleCiTokenExists = os.LookupEnv("CIRCLECI_TOKEN")
 var TravisCIToken, TravisCITokenExists = os.LookupEnv("TRAVIS_TOKEN")
 var Debug = getBoolEnvVarHelper("DEBUG")
