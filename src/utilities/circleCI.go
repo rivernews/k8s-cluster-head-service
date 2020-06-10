@@ -78,6 +78,7 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 		},
 	})
 	responseMessage.WriteString(fetchResultMessage)
+	responseMessage.WriteString("<https://app.circleci.com/pipelines/github/rivernews/iriversland2-kubernetes|Check out the pipeline> in CircleCI dashboard.\n")
 	
 	SendSlackMessage(responseMessage.String())
 
