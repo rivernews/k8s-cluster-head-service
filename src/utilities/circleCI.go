@@ -55,6 +55,9 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 	var responseMessage strings.Builder
 	if branch == "release" {
 		responseMessage.WriteString("Provisioning kubernetes requested.\n")
+		responseMessage.WriteString("Droplet size: `")
+		responseMessage.WriteString(dropletSize)
+		responseMessage.WriteString("`\n")
 	} else if branch == "destroy-release" {
 		responseMessage.WriteString("Destroying kubernetes requested.\n")
 	} else {
