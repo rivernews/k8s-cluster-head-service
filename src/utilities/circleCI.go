@@ -15,13 +15,15 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 	fullCommand := strings.TrimSpace(parsedSlackRequest.Text)
 	fullCommand = strings.ToLower(fullCommand)
 	commandTokens := strings.Split(fullCommand, ":")
-	// parse dropletSize
-	dropletSize := KubernetesClusterDefaultDropletSize
+	// parse dropletSize - default is large size
+	dropletSize := LargeDroplet
 	if len(commandTokens) > 1 {
 		if commandTokens[1] == "m" {
 			dropletSize = MediumDroplet
 		} else if commandTokens[1] == "s" {
 			dropletSize = SmallDroplet
+		} else if commandTokens[1] == "l" {
+			dropletSize = LargeDroplet
 		}
 	}
 
