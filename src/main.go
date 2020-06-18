@@ -10,7 +10,6 @@ import (
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/utilities"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gomodule/redigo/redis"
 	"github.com/gocraft/work"
 )
 
@@ -24,25 +23,26 @@ func main() {
 	}
 
 	// job queue
-	log.Println("redis url is " + utilities.RedisUrl)
-	var redisPool = &redis.Pool{
-		MaxActive: 5,
-		MaxIdle: 5,
-		Wait: true,
-		Dial: func() (redis.Conn, error) {
-			return redis.DialURL(utilities.RedisUrl)
-		},
+	// https://github.com/gocraft/work
+
+	conn := utilities.RedisPool.Get()
+	err := conn.Flush()
+	if err == nil {
+		log.Println("Successfully flushed!")
+	} else {
+		log.Fatalln("Flush failed")
 	}
-	conn := redisPool.Get()
-	conn.Flush()
-	defer conn.Close()
+	// defer conn.Close()
+	defer utilities.RedisPool.Close()
 
 	// Make an enqueuer with a particular namespace
-	var enqueuer = work.NewEnqueuer("my_app_namespace", redisPool)
+	var enqueuer = work.NewEnqueuer("my_app_namespace", utilities.RedisPool)
 	// Enqueue a job named "send_email" with the specified parameters.
-	_, err := enqueuer.Enqueue("send_email", work.Q{"address": "test@example.com", "subject": "hello world", "customer_id": 4})
+	task, err := enqueuer.Enqueue("send_email", work.Q{"address": "test@example.com", "subject": "hello world", "customer_id": 4})
 	if err != nil {
 		log.Fatal(err)
+	} else {
+		log.Println(task)
 	}
 
 	// web
@@ -114,7 +114,7 @@ func checkAppConfigurationOK() bool {
 		return false
 	}
 
-	if !utilities.RedisUrlExists {
+	if !utilities.RedisURLExists {
 		log.Fatalln("Redis URL is not configured")
 		return false
 	}

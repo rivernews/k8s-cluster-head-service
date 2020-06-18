@@ -15,9 +15,7 @@ var LargeDroplet = "s-4vcpu-8gb"
 var MediumDroplet = "s-2vcpu-4gb"
 var SmallDroplet = "s-1vcpu-3gb"
 
-
-var RedisUrl, RedisUrlExists = os.LookupEnv("REDISCLOUD_URL")
-
+var RedisURL, RedisURLExists = os.LookupEnv("REDISCLOUD_URL")
 
 // getEnvVarHelper - don't care about no value when getting env var.
 // Do not use this for credential, because we should always make sure credentials are available
