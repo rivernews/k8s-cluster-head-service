@@ -10,6 +10,8 @@ import (
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/utilities"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gomodule/redigo/redis"
+	"github.com/gocraft/work"
 )
 
 func main() {
@@ -20,6 +22,30 @@ func main() {
 	if !utilities.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
+	// job queue
+
+	var redisPool = &redis.Pool{
+		MaxActive: 5,
+		MaxIdle: 5,
+		Wait: true,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", utilities.RedisUrl)
+		},
+	}
+	conn := redisPool.Get()
+	conn.Flush()
+	defer conn.Close()
+
+	// Make an enqueuer with a particular namespace
+	var enqueuer = work.NewEnqueuer("my_app_namespace", redisPool)
+	// Enqueue a job named "send_email" with the specified parameters.
+	_, err := enqueuer.Enqueue("send_email", work.Q{"address": "test@example.com", "subject": "hello world", "customer_id": 4})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// web
 
 	router := gin.Default()
 
@@ -85,6 +111,11 @@ func checkAppConfigurationOK() bool {
 
 	if !utilities.SendSlackURLExists {
 		log.Fatalln("Send slack URL is not configured")
+		return false
+	}
+
+	if !utilities.RedisUrlExists {
+		log.Fatalln("Redis URL is not configured")
 		return false
 	}
 
