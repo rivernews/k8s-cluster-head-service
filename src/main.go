@@ -24,7 +24,7 @@ func main() {
 	}
 
 	// job queue
-
+	log.Println("redis url is " + utilities.RedisUrl)
 	var redisPool = &redis.Pool{
 		MaxActive: 5,
 		MaxIdle: 5,
