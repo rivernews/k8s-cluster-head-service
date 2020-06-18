@@ -30,7 +30,7 @@ func main() {
 		MaxIdle: 5,
 		Wait: true,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", utilities.RedisUrl)
+			return redis.DialURL(utilities.RedisUrl)
 		},
 	}
 	conn := redisPool.Get()
