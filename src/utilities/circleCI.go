@@ -2,6 +2,7 @@ package utilities
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/url"
 	"strings"
@@ -93,7 +94,7 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 }
 
 // pollingCircleCIBuild returns the status string of the build given a pipeline uuid.
-func FetchCircleCIBuildStatus(pipelineID string) types.CircleCIPipelineWorkflowListResponseType {
+func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
 	fetchURL := BuildString([]string{
 		circleCIAPIBaseURL, "/pipeline/", pipelineID, "/workflow",
 	})
@@ -114,6 +115,9 @@ func FetchCircleCIBuildStatus(pipelineID string) types.CircleCIPipelineWorkflowL
 		log.Panicln(unmarshalJSONErr)
 	}
 
-	log.Printf("GET workflows:\n%v", pipelineWorkflows)
-	return pipelineWorkflows
+	if len(pipelineWorkflows.Workflows) < 1 {
+		return "", errors.New("No workflow exists for pipeline " + pipelineID)
+	}
+
+	return pipelineWorkflows.Workflows[0].Status, nil
 }
