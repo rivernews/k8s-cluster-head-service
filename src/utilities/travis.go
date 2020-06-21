@@ -25,7 +25,7 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 	urlBuilder.WriteString(encodedProjectSlug)
 	urlBuilder.WriteString("/requests")
 
-	fetchedMessage := Fetch(FetchOption{
+	_, fetchedMessage := Fetch(FetchOption{
 		Method: "POST",
 		URL:    urlBuilder.String(),
 		Headers: map[string][]string{
