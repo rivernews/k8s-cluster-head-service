@@ -93,7 +93,7 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 	return
 }
 
-// pollingCircleCIBuild returns the status string of the build given a pipeline uuid.
+// FetchCircleCIBuildStatus - returns the status string of the build given a pipeline uuid.
 func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
 	fetchURL := BuildString([]string{
 		circleCIAPIBaseURL, "/pipeline/", pipelineID, "/workflow",
@@ -120,4 +120,16 @@ func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
 	}
 
 	return pipelineWorkflows.Workflows[0].Status, nil
+}
+
+// CircleCIWaitTillWorkflowFinish - wait till the build finalizes,
+// when finalized, return the final status string
+func CircleCIWaitTillWorkflowFinish(pipelineID string) string {
+	// while look polling
+	status := "on_hold"
+	for status == "running" || status == "on_hold" {
+		status, _ = FetchCircleCIBuildStatus(pipelineID)
+	}
+
+	return status
 }
