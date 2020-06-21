@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/controllers"
+	"github.com/rivernews/k8s-cluster-head-service/v2/src/queue"
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/utilities"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gocraft/work"
 )
 
 func main() {
@@ -23,27 +23,8 @@ func main() {
 	}
 
 	// job queue
-	// https://github.com/gocraft/work
 
-	conn := utilities.RedisPool.Get()
-	err := conn.Flush()
-	if err == nil {
-		log.Println("Successfully flushed!")
-	} else {
-		log.Fatalln("Flush failed")
-	}
-	// defer conn.Close()
-	defer utilities.RedisPool.Close()
-
-	// Make an enqueuer with a particular namespace
-	var enqueuer = work.NewEnqueuer("my_app_namespace", utilities.RedisPool)
-	// Enqueue a job named "send_email" with the specified parameters.
-	task, err := enqueuer.Enqueue("send_email", work.Q{"address": "test@example.com", "subject": "hello world", "customer_id": 4})
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		log.Println(task)
-	}
+	queue.TestJobQueue()
 
 	// web
 
