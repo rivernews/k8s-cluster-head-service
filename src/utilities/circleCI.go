@@ -1,6 +1,8 @@
 package utilities
 
 import (
+	"encoding/json"
+	"errors"
 	"log"
 	"net/url"
 	"strings"
@@ -9,6 +11,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+var circleCIAPIBaseURL = "https://circleci.com/api/v2"
+
+var circleCIHeaders = map[string][]string{
+	"Content-Type":           {"application/json"},
+	"Accept":                 {"application/json"},
+	"x-attribution-login":    {"string"},
+	"x-attribution-actor-id": {"string"},
+}
 
 func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.SlackRequestType) {
 	// parse slack command
@@ -35,22 +46,17 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 		branch = "destroy-release"
 	}
 
-	// prepare headers
-	headers := map[string][]string{
-		"Content-Type":           {"application/json"},
-		"Accept":                 {"application/json"},
-		"x-attribution-login":    {"string"},
-		"x-attribution-actor-id": {"string"},
-	}
-
 	// prepare url static path parameter
 	encodedProjectSlug := url.QueryEscape("github/rivernews/iriversland2-kubernetes")
 
 	// generate api call url and assign static path parameter
-	var urlBuilder strings.Builder
-	urlBuilder.WriteString("https://circleci.com/api/v2/project/")
-	urlBuilder.WriteString(encodedProjectSlug)
-	urlBuilder.WriteString("/pipeline")
+	// var urlBuilder strings.Builder
+	urlBuilder := StringBuilder([]string{
+		circleCIAPIBaseURL,
+		"/project/",
+		encodedProjectSlug,
+		"/pipeline",
+	})
 	log.Printf("requesting circle ci at %s", urlBuilder.String())
 
 	// make request
@@ -65,10 +71,10 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 	} else {
 		responseMessage.WriteString("Verify kubernetes requested.\n")
 	}
-	fetchResultMessage := Fetch(FetchOption{
+	_, fetchResultMessage := Fetch(FetchOption{
 		Method:  "POST",
 		URL:     urlBuilder.String(),
-		Headers: headers,
+		Headers: circleCIHeaders,
 		QueryParams: map[string]string{
 			"circle-token": CircleCiToken,
 		},
@@ -81,8 +87,49 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 	})
 	responseMessage.WriteString(fetchResultMessage)
 	responseMessage.WriteString("<https://app.circleci.com/pipelines/github/rivernews/iriversland2-kubernetes|Check out the pipeline> in CircleCI dashboard.\n")
-	
+
 	SendSlackMessage(responseMessage.String())
 
 	return
+}
+
+// FetchCircleCIBuildStatus - returns the status string of the build given a pipeline uuid.
+func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
+	fetchURL := BuildString([]string{
+		circleCIAPIBaseURL, "/pipeline/", pipelineID, "/workflow",
+	})
+
+	responseBytes, _ := Fetch(FetchOption{
+		Method:  "GET",
+		URL:     fetchURL,
+		Headers: circleCIHeaders,
+		QueryParams: map[string]string{
+			"circle-token": CircleCiToken,
+		},
+		DisableHumanMessage: true,
+	})
+
+	var pipelineWorkflows types.CircleCIPipelineWorkflowListResponseType
+	unmarshalJSONErr := json.Unmarshal(responseBytes, &pipelineWorkflows)
+	if unmarshalJSONErr != nil {
+		log.Panicln(unmarshalJSONErr)
+	}
+
+	if len(pipelineWorkflows.Workflows) < 1 {
+		return "", errors.New("No workflow exists for pipeline " + pipelineID)
+	}
+
+	return pipelineWorkflows.Workflows[0].Status, nil
+}
+
+// CircleCIWaitTillWorkflowFinish - wait till the build finalizes,
+// when finalized, return the final status string
+func CircleCIWaitTillWorkflowFinish(pipelineID string) string {
+	// while look polling
+	status := "on_hold"
+	for status == "running" || status == "on_hold" {
+		status, _ = FetchCircleCIBuildStatus(pipelineID)
+	}
+
+	return status
 }

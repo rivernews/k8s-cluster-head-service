@@ -11,15 +11,16 @@ import (
 
 // FetchOption - args for method `Fetch`
 type FetchOption struct {
-	QueryParams map[string]string
-	PostData    interface{}
-	Headers     map[string][]string
-	URL         string
-	Method      string
+	QueryParams         map[string]string
+	PostData            interface{}
+	Headers             map[string][]string
+	URL                 string
+	Method              string
+	DisableHumanMessage bool
 }
 
 // Fetch - convenient method to make request with querystring and post data
-func Fetch(option FetchOption) string {
+func Fetch(option FetchOption) ([]byte, string) {
 	requestURL, _ := url.Parse(option.URL)
 
 	// prepare querystring
@@ -54,20 +55,22 @@ func Fetch(option FetchOption) string {
 	req.Header = headers
 	client := &http.Client{}
 	res, err := client.Do(req)
+	bytesContent, _ := ioutil.ReadAll(res.Body)
 
 	// log response
 	var responseMessage strings.Builder
-	responseMessage.WriteString("Response:\n```\n")
-	bytesContent, _ := ioutil.ReadAll(res.Body)
-	responseMessage.WriteString(string(bytesContent))
-	responseMessage.WriteString("\n```\nAny error:\n```\n")
-	if err != nil {
-		responseMessage.WriteString("🔴 ")
-		responseMessage.WriteString(err.Error())
-	} else {
-		responseMessage.WriteString("🟢 No error")
+	if !option.DisableHumanMessage {
+		responseMessage.WriteString("Response:\n```\n")
+		responseMessage.WriteString(string(bytesContent))
+		responseMessage.WriteString("\n```\nAny error:\n```\n")
+		if err != nil {
+			responseMessage.WriteString("🔴 ")
+			responseMessage.WriteString(err.Error())
+		} else {
+			responseMessage.WriteString("🟢 No error")
+		}
+		responseMessage.WriteString("\n```\n")
 	}
-	responseMessage.WriteString("\n```\n")
 
-	return responseMessage.String()
+	return bytesContent, responseMessage.String()
 }
