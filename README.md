@@ -256,6 +256,8 @@ Web framework
 - Line up stats - compare their stars!: https://github.com/mingrammer/go-web-framework-stars
 - The most popular - gin: https://github.com/gin-gonic/gin
 - Fiber: https://github.com/gofiber/fiber
+- Parsing http response
+  - Parsing json into struct objects: https://stackoverflow.com/questions/33061117/in-golang-what-is-the-difference-between-json-encoding-and-marshalling
 
 ## Working with Redigo - a redis golang client
 - Tutorial [on parsing redis reply into struct](https://www.alexedwards.net/blog/working-with-redis).
