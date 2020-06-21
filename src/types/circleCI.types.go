@@ -24,7 +24,7 @@ type CircleCIRequestType struct {
 type CircleCIWorkflowType struct {
 	Status         string `json:"status"`
 	PipelineID     string `json:"pipeline_id"`
-	PipelineNumber string `json:"pipeline_number"`
+	PipelineNumber int    `json:"pipeline_number"`
 	Name           string `json:"name"`
 	CreatedAt      string `json:"created_at"`
 }

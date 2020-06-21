@@ -93,7 +93,7 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 }
 
 // pollingCircleCIBuild returns the status string of the build given a pipeline uuid.
-func fetchCircleCIBuildStatus(pipelineID string) {
+func FetchCircleCIBuildStatus(pipelineID string) types.CircleCIPipelineWorkflowListResponseType {
 	fetchURL := BuildString([]string{
 		circleCIAPIBaseURL, "/pipeline/", pipelineID, "/workflow",
 	})
@@ -108,11 +108,12 @@ func fetchCircleCIBuildStatus(pipelineID string) {
 		DisableHumanMessage: true,
 	})
 
-	var PipelineWorkflows types.CircleCIPipelineWorkflowListResponseType
-	unmarshalJSONErr := json.Unmarshal(responseBytes, &PipelineWorkflows)
+	var pipelineWorkflows types.CircleCIPipelineWorkflowListResponseType
+	unmarshalJSONErr := json.Unmarshal(responseBytes, &pipelineWorkflows)
 	if unmarshalJSONErr != nil {
 		log.Panicln(unmarshalJSONErr)
 	}
 
-	log.Printf("GET workflows:\n%v", PipelineWorkflows)
+	log.Printf("GET workflows:\n%v", pipelineWorkflows)
+	return pipelineWorkflows
 }

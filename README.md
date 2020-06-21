@@ -258,6 +258,7 @@ Web framework
 - Fiber: https://github.com/gofiber/fiber
 - Parsing http response
   - Parsing json into struct objects: https://stackoverflow.com/questions/33061117/in-golang-what-is-the-difference-between-json-encoding-and-marshalling
+  - Using tag: https://blog.josephmisiti.com/parsing-json-responses-in-golang
 
 ## Working with Redigo - a redis golang client
 - Tutorial [on parsing redis reply into struct](https://www.alexedwards.net/blog/working-with-redis).
