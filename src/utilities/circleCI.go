@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/types"
 
@@ -71,7 +72,7 @@ func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.Sl
 	} else {
 		responseMessage.WriteString("Verify kubernetes requested.\n")
 	}
-	_, fetchResultMessage := Fetch(FetchOption{
+	_, fetchResultMessage, _ := Fetch(FetchOption{
 		Method:  "POST",
 		URL:     urlBuilder.String(),
 		Headers: circleCIHeaders,
@@ -99,7 +100,7 @@ func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
 		circleCIAPIBaseURL, "/pipeline/", pipelineID, "/workflow",
 	})
 
-	responseBytes, _ := Fetch(FetchOption{
+	responseBytes, _, fetchErr := Fetch(FetchOption{
 		Method:  "GET",
 		URL:     fetchURL,
 		Headers: circleCIHeaders,
@@ -108,11 +109,14 @@ func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
 		},
 		DisableHumanMessage: true,
 	})
+	if fetchErr != nil {
+		return "", fetchErr
+	}
 
 	var pipelineWorkflows types.CircleCIPipelineWorkflowListResponseType
 	unmarshalJSONErr := json.Unmarshal(responseBytes, &pipelineWorkflows)
 	if unmarshalJSONErr != nil {
-		log.Panicln(unmarshalJSONErr)
+		return "", unmarshalJSONErr
 	}
 
 	if len(pipelineWorkflows.Workflows) < 1 {
@@ -124,12 +128,28 @@ func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
 
 // CircleCIWaitTillWorkflowFinish - wait till the build finalizes,
 // when finalized, return the final status string
-func CircleCIWaitTillWorkflowFinish(pipelineID string) string {
+func CircleCIWaitTillWorkflowFinish(pipelineID string) (string, error) {
+	MAX_POLLING_COUNT := 12 * 20
+	pollingCount := 0
+
 	// while look polling
 	status := "on_hold"
-	for status == "running" || status == "on_hold" {
-		status, _ = FetchCircleCIBuildStatus(pipelineID)
+	var fetchErr error = nil
+	for (status == "running" || status == "on_hold") && pollingCount <= MAX_POLLING_COUNT  {
+		status, fetchErr = FetchCircleCIBuildStatus(pipelineID)
+
+		time.Sleep(5 * time.Second)
+		pollingCount++
 	}
 
-	return status
+	if status != "running" && status != "on_hold" && fetchErr == nil {
+		return status, fetchErr
+	}
+
+	return "", errors.New(
+		BuildString([]string{
+			"Timed out while waiting for CircleCI workflow to finish for pipeline ", pipelineID, "\n",
+			"Any fetch error? ", fetchErr.Error(),
+		})
+	)
 }
