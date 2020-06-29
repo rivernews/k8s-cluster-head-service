@@ -46,7 +46,7 @@ func SlackCommandController(c *gin.Context) {
 		} else if parsedSlackRequest.TriggerWord == "slk" {
 			utilities.TravisCITriggerSLKHelper(c, parsedSlackRequest)
 		} else {
-			utilities.CircleCITriggerK8sClusterHelper(c, parsedSlackRequest)
+			utilities.CircleCITriggerK8sClusterHelper(parsedSlackRequest)
 		}
 	}
 
