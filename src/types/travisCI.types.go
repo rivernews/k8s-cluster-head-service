@@ -5,7 +5,7 @@ type TravisCIBuildRequestResponseType struct {
 }
 
 type TravisCIBuild struct {
-	ID        string `json:"id"`
+	ID        int    `json:"id"`
 	State     string `json:"state"`
 	StartedAt string `json:"started_at"`
 }
