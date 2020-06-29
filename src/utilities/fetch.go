@@ -20,7 +20,7 @@ type FetchOption struct {
 }
 
 // Fetch - convenient method to make request with querystring and post data
-func Fetch(option FetchOption) ([]byte, string) {
+func Fetch(option FetchOption) ([]byte, string, error) {
 	requestURL, _ := url.Parse(option.URL)
 
 	// prepare querystring
@@ -51,10 +51,11 @@ func Fetch(option FetchOption) ([]byte, string) {
 	}
 
 	// append request config and make request
-	req, err := http.NewRequest(option.Method, requestURL.String(), postDataBuffer)
+	req, fetchErr := http.NewRequest(option.Method, requestURL.String(), postDataBuffer)
 	req.Header = headers
 	client := &http.Client{}
-	res, err := client.Do(req)
+	res, fetchErr := client.Do(req)
+
 	bytesContent, _ := ioutil.ReadAll(res.Body)
 
 	// log response
@@ -63,14 +64,14 @@ func Fetch(option FetchOption) ([]byte, string) {
 		responseMessage.WriteString("Response:\n```\n")
 		responseMessage.WriteString(string(bytesContent))
 		responseMessage.WriteString("\n```\nAny error:\n```\n")
-		if err != nil {
+		if fetchErr != nil {
 			responseMessage.WriteString("🔴 ")
-			responseMessage.WriteString(err.Error())
+			responseMessage.WriteString(fetchErr.Error())
 		} else {
 			responseMessage.WriteString("🟢 No error")
 		}
 		responseMessage.WriteString("\n```\n")
 	}
 
-	return bytesContent, responseMessage.String()
+	return bytesContent, responseMessage.String(), fetchErr
 }

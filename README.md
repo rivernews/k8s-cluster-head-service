@@ -17,6 +17,12 @@ Head service for scaling up and down k8s cluster, and managing services and rout
   - If you don't have the CLI installed yet, [follow instruction](https://github.com/gocraft/work#run-the-web-ui) and run `go get github.com/gocraft/work/cmd/workwebui && go install github.com/gocraft/work/cmd/workwebui`.
   - ⚠️ You'll have to remove the username part from the redis URL, looks like it's not supported and will cause AUTh argument number error. Basically just [following this example](https://github.com/gocraft/work/issues/114#issuecomment-476822085).
 
+## Testing
+
+We're using [Testify](https://github.com/stretchr/testify) the test framework.
+- `cd` into the directory where the test file resides
+- Run `go test`
+
 ## Manual CI/CD API call
 
 ### Circle CI
