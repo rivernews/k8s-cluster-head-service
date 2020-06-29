@@ -55,7 +55,7 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 
 func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildRequestResponseType, error) {
 	// wait up to 5 minutes
-	MAXIMUM_POLLING_COUNT := 12 * 5
+	MaxPollingCount := 12 * 5
 	pollingCount := 0
 
 	travisCIRequestObject := types.TravisCIBuildRequestResponseType{
@@ -66,7 +66,7 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildReq
 		travisAPIBaseURL, "/repo/", travisCISLKEncodedProjectSlug, "/request/", requestID,
 	})
 
-	for pollingCount <= MAXIMUM_POLLING_COUNT {
+	for pollingCount <= MaxPollingCount {
 		time.Sleep(5 * time.Second)
 		responseBytes, _, fetchErr := Fetch(FetchOption{
 			Method:              "GET",
