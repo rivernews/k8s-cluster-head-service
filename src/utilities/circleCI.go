@@ -129,13 +129,13 @@ func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
 // CircleCIWaitTillWorkflowFinish - wait till the build finalizes,
 // when finalized, return the final status string
 func CircleCIWaitTillWorkflowFinish(pipelineID string) (string, error) {
-	MAX_POLLING_COUNT := 12 * 20
+	MaxPollingCount := 12 * 20
 	pollingCount := 0
 
 	// while look polling
 	status := "on_hold"
 	var fetchErr error = nil
-	for (status == "running" || status == "on_hold") && pollingCount <= MAX_POLLING_COUNT  {
+	for (status == "running" || status == "on_hold") && pollingCount <= MaxPollingCount {
 		status, fetchErr = FetchCircleCIBuildStatus(pipelineID)
 
 		time.Sleep(5 * time.Second)
@@ -150,6 +150,6 @@ func CircleCIWaitTillWorkflowFinish(pipelineID string) (string, error) {
 		BuildString([]string{
 			"Timed out while waiting for CircleCI workflow to finish for pipeline ", pipelineID, "\n",
 			"Any fetch error? ", fetchErr.Error(),
-		})
+		}),
 	)
 }
