@@ -53,7 +53,7 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 	return
 }
 
-func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildRequestResponseType, error) {
+func TravisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
 	// wait up to 5 minutes
 	MaxPollingCount := 12 * 5
 	pollingCount := 0
@@ -89,11 +89,11 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildReq
 		}
 
 		if len(travisCIRequestObject.Builds) > 0 {
-			return travisCIRequestObject, nil
+			return travisCIRequestObject.Builds[0].State, nil
 		}
 	}
 
-	return travisCIRequestObject, errors.New("Time out while waiting for travis build be provisioned for request ID " + requestID)
+	return "", errors.New("Time out while waiting for travis build be provisioned for request ID " + requestID)
 }
 
 /*

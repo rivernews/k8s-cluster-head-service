@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/types"
-
-	"github.com/gin-gonic/gin"
 )
 
 var circleCIAPIBaseURL = "https://circleci.com/api/v2"
@@ -22,7 +20,7 @@ var circleCIHeaders = map[string][]string{
 	"x-attribution-actor-id": {"string"},
 }
 
-func CircleCITriggerK8sClusterHelper(c *gin.Context, parsedSlackRequest types.SlackRequestType) {
+func CircleCITriggerK8sClusterHelper(parsedSlackRequest types.SlackRequestType) {
 	// parse slack command
 	fullCommand := strings.TrimSpace(parsedSlackRequest.Text)
 	fullCommand = strings.ToLower(fullCommand)
