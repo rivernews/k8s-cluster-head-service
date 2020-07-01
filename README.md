@@ -13,7 +13,7 @@ Head service for scaling up and down k8s cluster, and managing services and rout
 1. The app can be accessed at `https://k8s-cluster-head-service.herokuapp.com/`
 
 ## Job queue
-- To inspect job queues, run `workwebui -redis="$REDISCLOUD_URL" -ns=my_app_namespace`, then navigate to brower `localhost:5040`.
+- To inspect job queues, run `workwebui -redis="$REDISCLOUD_URL" -ns=my_app_namespace`, then navigate to brower `http://localhost:5040`.
   - If you don't have the CLI installed yet, [follow instruction](https://github.com/gocraft/work#run-the-web-ui) and run `go get github.com/gocraft/work/cmd/workwebui && go install github.com/gocraft/work/cmd/workwebui`.
   - ⚠️ You'll have to remove the username part from the redis URL, looks like it's not supported and will cause AUTh argument number error. Basically just [following this example](https://github.com/gocraft/work/issues/114#issuecomment-476822085).
 
@@ -26,6 +26,8 @@ We're using [Testify](https://github.com/stretchr/testify) the test framework.
 ## Manual CI/CD API call
 
 ### Circle CI
+
+Lookup the [project dashboard](https://app.circleci.com/pipelines/github/rivernews/iriversland2-kubernetes).
 
 #### Create a new pipeline
 

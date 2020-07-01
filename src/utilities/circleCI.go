@@ -3,7 +3,6 @@ package utilities
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -20,7 +19,7 @@ var circleCIHeaders = map[string][]string{
 	"x-attribution-actor-id": {"string"},
 }
 
-func CircleCITriggerK8sClusterHelper(parsedSlackRequest types.SlackRequestType) {
+func CircleCITriggerK8sClusterHelper(parsedSlackRequest types.SlackRequestType) (types.CircleCIPipelineType, error) {
 	// parse slack command
 	fullCommand := strings.TrimSpace(parsedSlackRequest.Text)
 	fullCommand = strings.ToLower(fullCommand)
@@ -50,13 +49,14 @@ func CircleCITriggerK8sClusterHelper(parsedSlackRequest types.SlackRequestType) 
 
 	// generate api call url and assign static path parameter
 	// var urlBuilder strings.Builder
-	urlBuilder := StringBuilder([]string{
+	urlBuilder := StringBuilder(
 		circleCIAPIBaseURL,
 		"/project/",
 		encodedProjectSlug,
 		"/pipeline",
-	})
-	log.Printf("requesting circle ci at %s", urlBuilder.String())
+	)
+
+	Logger("INFO", "Requesting CircleCI at ", urlBuilder.String())
 
 	// make request
 	var responseMessage strings.Builder
@@ -70,7 +70,7 @@ func CircleCITriggerK8sClusterHelper(parsedSlackRequest types.SlackRequestType) 
 	} else {
 		responseMessage.WriteString("Verify kubernetes requested.\n")
 	}
-	_, fetchResultMessage, _ := Fetch(FetchOption{
+	responseBytes, fetchResultMessage, FetchErr := Fetch(FetchOption{
 		Method:  "POST",
 		URL:     urlBuilder.String(),
 		Headers: circleCIHeaders,
@@ -84,19 +84,34 @@ func CircleCITriggerK8sClusterHelper(parsedSlackRequest types.SlackRequestType) 
 			},
 		},
 	})
+
+	// send slack to report response
 	responseMessage.WriteString(fetchResultMessage)
 	responseMessage.WriteString("<https://app.circleci.com/pipelines/github/rivernews/iriversland2-kubernetes|Check out the pipeline> in CircleCI dashboard.\n")
-
 	SendSlackMessage(responseMessage.String())
 
-	return
+	// construct return value
+
+	var circleCIPipeline types.CircleCIPipelineType
+
+	if FetchErr != nil {
+		return circleCIPipeline, FetchErr
+	}
+
+	// construct the response and return it
+	unmarshalJSONErr := json.Unmarshal(responseBytes, &circleCIPipeline)
+	if unmarshalJSONErr != nil {
+		return circleCIPipeline, unmarshalJSONErr
+	}
+
+	return circleCIPipeline, nil
 }
 
 // FetchCircleCIBuildStatus - returns the status string of the build given a pipeline uuid.
 func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
-	fetchURL := BuildString([]string{
+	fetchURL := BuildString(
 		circleCIAPIBaseURL, "/pipeline/", pipelineID, "/workflow",
-	})
+	)
 
 	responseBytes, _, fetchErr := Fetch(FetchOption{
 		Method:  "GET",
@@ -133,8 +148,19 @@ func CircleCIWaitTillWorkflowFinish(pipelineID string) (string, error) {
 	// while look polling
 	status := "on_hold"
 	var fetchErr error = nil
-	for (status == "running" || status == "on_hold") && pollingCount <= MaxPollingCount {
+	for (status == "running" || status == "on_hold" || status == "") && pollingCount <= MaxPollingCount {
+
+		Logger("INFO", "Polling ", pipelineID, " build to finish...")
+
 		status, fetchErr = FetchCircleCIBuildStatus(pipelineID)
+
+		var errorMessage string
+		if fetchErr != nil {
+			errorMessage = fetchErr.Error()
+		} else {
+			errorMessage = ""
+		}
+		Logger("INFO", "Polling status: ", status, "; error: ", errorMessage)
 
 		time.Sleep(5 * time.Second)
 		pollingCount++
@@ -145,9 +171,9 @@ func CircleCIWaitTillWorkflowFinish(pipelineID string) (string, error) {
 	}
 
 	return "", errors.New(
-		BuildString([]string{
+		BuildString(
 			"Timed out while waiting for CircleCI workflow to finish for pipeline ", pipelineID, "\n",
 			"Any fetch error? ", fetchErr.Error(),
-		}),
+		),
 	)
 }

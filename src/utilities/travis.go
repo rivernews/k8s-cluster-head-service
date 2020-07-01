@@ -62,11 +62,17 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
 		Builds: []types.TravisCIBuild{},
 	}
 
-	fetchURL := BuildString([]string{
+	fetchURL := BuildString(
 		travisAPIBaseURL, "/repo/", travisCISLKEncodedProjectSlug, "/request/", requestID,
-	})
+	)
 
 	for pollingCount <= MaxPollingCount {
+		if GetLogLevelValue() >= LogLevelTypes["INFO"] {
+			log.Print(BuildString(
+				"Polling ", requestID, " ...",
+			))
+		}
+
 		time.Sleep(5 * time.Second)
 		responseBytes, _, fetchErr := Fetch(FetchOption{
 			Method:              "GET",
@@ -103,9 +109,9 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
 	https://developer.travis-ci.com/resource/build#Build
 */
 func TravisCICheckBuildStutus(buildID string) (string, error) {
-	fetchURL := BuildString([]string{
+	fetchURL := BuildString(
 		travisAPIBaseURL, "/build/", buildID,
-	})
+	)
 
 	responseBytes, _, fetchErr := Fetch(FetchOption{
 		Method:              "GET",
