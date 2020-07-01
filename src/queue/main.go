@@ -53,10 +53,6 @@ func TestJobQueue() {
 
 	// Make an enqueuer with a particular namespace
 	var enqueuer = work.NewEnqueuer("my_app_namespace", utilities.RedisPool)
-	// Enqueue a job named "send_email" with the specified parameters.
-	for i := 1; i < 5; i++ {
-		enqueuer.Enqueue("send_email", work.Q{"address": "test@example.com", "subject": "hello world", "customer_id": 4})
-	}
 
 	// worker pool
 
@@ -72,13 +68,25 @@ func TestJobQueue() {
 	pool.Middleware((*Context).FindCustomer)
 
 	// Map the name of jobs to handler functions
-	pool.Job("send_email", (*Context).SendEmail)
+	pool.JobWithOptions("send_email", work.JobOptions{
+		MaxFails: 1,
+	}, (*Context).SendEmail)
 
 	// Customize options:
 	pool.JobWithOptions("export", work.JobOptions{Priority: 10, MaxFails: 1}, (*Context).Export)
+	pool.JobWithOptions("guided_k8s_s3_elastic_session", work.JobOptions{
+		MaxFails: 1,
+	}, (*Context).GuidedSLKS3JobElasticScalingSession)
 
 	// Start processing jobs
 	pool.Start()
+
+	// enqueue jobs
+	// Enqueue a job named "send_email" with the specified parameters.
+	// for i := 1; i < 5; i++ {
+	// 	enqueuer.Enqueue("send_email", work.Q{"address": "test@example.com", "subject": "hello world", "customer_id": 4})
+	// }
+	enqueuer.Enqueue("guided_k8s_s3_elastic_session", work.Q{})
 
 	// Wait for a signal to quit:
 	signalChan := make(chan os.Signal, 1)
@@ -86,5 +94,6 @@ func TestJobQueue() {
 	<-signalChan
 
 	// Stop the pool
+	utilities.Logger("INFO", "Worker pool stopped")
 	pool.Stop()
 }

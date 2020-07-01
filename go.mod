@@ -7,8 +7,10 @@ go 1.14
 // +heroku goVersion go1.14
 
 require (
+	github.com/braintree/manners v0.0.0-20160418043613-82a8879fc5fd // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
+	github.com/gocraft/web v0.0.0-20190207150652-9707327fb69b // indirect
 	github.com/gocraft/work v0.5.1
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/gomodule/redigo v1.8.2
