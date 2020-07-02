@@ -54,10 +54,10 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 }
 
 /*
-TravisCIWaitUntilBuildProvisioned - polls a request status,
-and return the first (latest) build as soon as a build is provisioned.
+travisCIWaitUntilBuildProvisioned - polls a request status,
+and return the first (latest) build's state as soon as a build is provisioned.
 */
-func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildRequestResponseType, error) {
+func travisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
 	// wait up to 5 minutes
 	MaxPollingCount := 12 * 5
 	pollingCount := 0
@@ -66,11 +66,17 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildReq
 		Builds: []types.TravisCIBuild{},
 	}
 
-	fetchURL := BuildString([]string{
+	fetchURL := BuildString(
 		travisAPIBaseURL, "/repo/", travisCISLKEncodedProjectSlug, "/request/", requestID,
-	})
+	)
 
 	for pollingCount <= MaxPollingCount {
+		if GetLogLevelValue() >= LogLevelTypes["INFO"] {
+			log.Print(BuildString(
+				"Polling ", requestID, " ...",
+			))
+		}
+
 		time.Sleep(5 * time.Second)
 		responseBytes, _, fetchErr := Fetch(FetchOption{
 			Method:              "GET",
@@ -93,11 +99,11 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildReq
 		}
 
 		if len(travisCIRequestObject.Builds) > 0 {
-			return travisCIRequestObject, nil
+			return travisCIRequestObject.Builds[0].State, nil
 		}
 	}
 
-	return travisCIRequestObject, errors.New("Time out while waiting for travis build be provisioned for request ID " + requestID)
+	return "", errors.New("Time out while waiting for travis build be provisioned for request ID " + requestID)
 }
 
 /*
@@ -107,9 +113,9 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildReq
 	https://developer.travis-ci.com/resource/build#Build
 */
 func TravisCICheckBuildStutus(buildID string) (string, error) {
-	fetchURL := BuildString([]string{
+	fetchURL := BuildString(
 		travisAPIBaseURL, "/build/", buildID,
-	})
+	)
 
 	responseBytes, _, fetchErr := Fetch(FetchOption{
 		Method:              "GET",

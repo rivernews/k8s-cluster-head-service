@@ -17,6 +17,31 @@ var SmallDroplet = "s-1vcpu-3gb"
 
 var RedisURL, RedisURLExists = os.LookupEnv("REDISCLOUD_URL")
 
+var LogLevelTypes = map[string]int{
+	"DEBUG": 4,
+	"INFO":  3,
+	"WARN":  2,
+	"ERROR": 1,
+}
+
+func GetLogLevel() (int, string) {
+	if Debug {
+		return LogLevelTypes["DEBUG"], "DEBUG"
+	}
+
+	var logLevel = getEnvVarOrDefault("LOG_LEVEL", "INFO")
+	if value, exist := LogLevelTypes[logLevel]; exist {
+		return value, logLevel
+	}
+
+	return LogLevelTypes["INFO"], "INFO"
+}
+
+func GetLogLevelValue() int {
+	value, _ := GetLogLevel()
+	return value
+}
+
 // getEnvVarHelper - don't care about no value when getting env var.
 // Do not use this for credential, because we should always make sure credentials are available
 // to avoid comparing to empty string when auth

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"log"
 	"net/http"
 
@@ -22,16 +21,6 @@ import (
 // Pipeline parameter doc
 // https://github.com/CircleCI-Public/api-preview-docs/blob/master/docs/pipeline-parameters.md
 func SlackCommandController(c *gin.Context) {
-	log.Println("in slack controller")
-
-	if !utilities.RequestFromSlackTokenCredentialExists {
-		log.Panic(errors.New("slack token not configured"))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"reason": "slack auth token not set",
-		})
-		return
-	}
-
 	parsedSlackRequest := types.SlackRequestType{}
 	if err := c.ShouldBind(&parsedSlackRequest); err != nil {
 		log.Printf("Cannot parse slack request, ignored: %s", err)
@@ -46,7 +35,7 @@ func SlackCommandController(c *gin.Context) {
 		} else if parsedSlackRequest.TriggerWord == "slk" {
 			utilities.TravisCITriggerSLKHelper(c, parsedSlackRequest)
 		} else {
-			utilities.CircleCITriggerK8sClusterHelper(c, parsedSlackRequest)
+			utilities.CircleCITriggerK8sClusterHelper(parsedSlackRequest)
 		}
 	}
 
