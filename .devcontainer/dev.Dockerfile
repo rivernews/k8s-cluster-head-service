@@ -59,6 +59,7 @@ RUN echo 'Installing go dev tools...' \
     && GOPATH=/tmp/gotools GO111MODULE=on go get -v \
         # add our own dev tools
         github.com/cosmtrek/air \
+        github.com/gocraft/work/cmd/workwebui \
         # vscode go dev tools
         honnef.co/go/tools/...@latest \
         golang.org/x/tools/cmd/gorename@latest \
