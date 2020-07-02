@@ -53,6 +53,10 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 	return
 }
 
+/*
+TravisCIWaitUntilBuildProvisioned - polls a request status,
+and return the first (latest) build as soon as a build is provisioned.
+*/
 func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuildRequestResponseType, error) {
 	// wait up to 5 minutes
 	MaxPollingCount := 12 * 5
@@ -124,4 +128,30 @@ func TravisCICheckBuildStutus(buildID string) (string, error) {
 	}
 
 	return travisCIBuild.State, nil
+}
+
+func TravisCIWaitTillBuildFinish(buildID string) (string, error) {
+	// poll for up to 20 minutes
+	MaxPollingCount := 12 * 20
+	pollingCount := 0
+	state := "received"
+
+	for (state != "passed" && state != "failed") && pollingCount <= MaxPollingCount {
+		pollingCount++
+		time.Sleep(5 * time.Second)
+		Logger("INFO", "Polling build ", buildID, " ...")
+
+		state, checkStatusError := TravisCICheckBuildStutus(buildID)
+		if checkStatusError != nil {
+			Logger("WARN", "Got error while polling. State: ", state, "; error: ", checkStatusError.Error())
+		} else {
+			Logger("INFO", "Polled state: ", state)
+		}
+	}
+
+	if state == "passed" || state == "failed" {
+		return state, nil
+	}
+
+	return "", errors.New("Time out while polling TravisCI for build " + buildID)
 }
