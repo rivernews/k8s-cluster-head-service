@@ -234,7 +234,8 @@ status	canceled
 
 ### Travis CI
 
-- Make request at `POST /repo/project-slug/requests/`
+- Make request at `POST /repo/project-slug/requests/`, [response](https://developer.travis-ci.com/resource/requests#Requests).
+
 - Get request status at `GET /repo/project-slug/request/:id`
   - We should be able to get the build id here.
 - Get build status at  `GET /build/:id`, of course, this `id` we'll be using build id, not the request id.

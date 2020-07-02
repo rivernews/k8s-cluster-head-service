@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/types"
-
-	"github.com/gin-gonic/gin"
 )
 
 var travisAPIBaseURL = "https://api.travis-ci.com"
@@ -25,7 +23,7 @@ var travisCIAPIHeaders = map[string][]string{
 /*
 	TravisCITriggerSLKHelper - triggers provisioning SLK deployment
 */
-func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequestType) {
+func TravisCITriggerSLKHelper(parsedSlackRequest types.SlackRequestType) (types.TravisCIRequestProvisionType, error) {
 
 	// build url
 	var urlBuilder strings.Builder
@@ -35,13 +33,16 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 	urlBuilder.WriteString(travisCISLKEncodedProjectSlug)
 	urlBuilder.WriteString("/requests")
 
-	_, fetchedMessage, _ := Fetch(FetchOption{
+	var travisCIRequestProvision types.TravisCIRequestProvisionType
+
+	_, fetchedMessage, fetchErr := Fetch(FetchOption{
 		Method:  "POST",
 		URL:     urlBuilder.String(),
 		Headers: travisCIAPIHeaders,
 		PostData: map[string]string{
 			"branch": "release",
 		},
+		responseStore: travisCIRequestProvision,
 	})
 
 	var respondSlackMessage strings.Builder
@@ -50,7 +51,7 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 
 	SendSlackMessage(respondSlackMessage.String())
 
-	return
+	return travisCIRequestProvision, fetchErr
 }
 
 /*
