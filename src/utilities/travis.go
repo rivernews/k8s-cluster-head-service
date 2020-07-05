@@ -42,7 +42,7 @@ func TravisCITriggerSLKHelper(parsedSlackRequest types.SlackRequestType) (types.
 		PostData: map[string]string{
 			"branch": "release",
 		},
-		responseStore: travisCIRequestProvision,
+		responseStore: &travisCIRequestProvision,
 	})
 
 	var respondSlackMessage strings.Builder
@@ -58,14 +58,10 @@ func TravisCITriggerSLKHelper(parsedSlackRequest types.SlackRequestType) (types.
 travisCIWaitUntilBuildProvisioned - polls a request status,
 and return the first (latest) build's state as soon as a build is provisioned.
 */
-func travisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
+func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuild, error) {
 	// wait up to 5 minutes
 	MaxPollingCount := 12 * 5
 	pollingCount := 0
-
-	travisCIRequestObject := types.TravisCIBuildRequestResponseType{
-		Builds: []types.TravisCIBuild{},
-	}
 
 	fetchURL := BuildString(
 		travisAPIBaseURL, "/repo/", travisCISLKEncodedProjectSlug, "/request/", requestID,
@@ -92,6 +88,7 @@ func travisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
 			continue
 		}
 
+		var travisCIRequestObject types.TravisCIBuildRequestResponseType
 		unmarshalJSONErr := json.Unmarshal(responseBytes, &travisCIRequestObject)
 
 		if unmarshalJSONErr != nil {
@@ -99,12 +96,14 @@ func travisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
 			continue
 		}
 
-		if len(travisCIRequestObject.Builds) > 0 {
-			return travisCIRequestObject.Builds[0].State, nil
+		if travisCIRequestObject.Builds != nil && len(travisCIRequestObject.Builds) > 0 {
+			return travisCIRequestObject.Builds[0], nil
 		}
 	}
 
-	return "", errors.New("Time out while waiting for travis build be provisioned for request ID " + requestID)
+	return types.TravisCIBuild{
+		ID: -1, State: "",
+	}, errors.New("Time out while waiting for travis build be provisioned for request ID " + requestID)
 }
 
 /*
@@ -141,23 +140,24 @@ func TravisCIWaitTillBuildFinish(buildID string) (string, error) {
 	// poll for up to 20 minutes
 	MaxPollingCount := 12 * 20
 	pollingCount := 0
-	state := "received"
 
-	for (state != "passed" && state != "failed") && pollingCount <= MaxPollingCount {
+	for pollingCount <= MaxPollingCount {
 		pollingCount++
 		time.Sleep(5 * time.Second)
 		Logger("INFO", "Polling build ", buildID, " ...")
 
 		state, checkStatusError := TravisCICheckBuildStutus(buildID)
 		if checkStatusError != nil {
-			Logger("WARN", "Got error while polling. State: ", state, "; error: ", checkStatusError.Error())
+			Logger("WARN", "Got error while polling. State: `", state, "`; error: ", checkStatusError.Error())
 		} else {
-			Logger("INFO", "Polled state: ", state)
+			Logger("INFO", "Polled state: `", state, "`\n")
 		}
-	}
+		state = strings.TrimSpace(state)
 
-	if state == "passed" || state == "failed" {
-		return state, nil
+		// when turn to finalized stage, return the state and stop polling
+		if state == "passed" || state == "failed" || state == "canceled" || state == "errored" {
+			return state, nil
+		}
 	}
 
 	return "", errors.New("Time out while polling TravisCI for build " + buildID)

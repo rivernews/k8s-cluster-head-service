@@ -80,7 +80,7 @@ func Fetch(option FetchOption) ([]byte, string, error) {
 
 	// parse response into struct if an interface is provided
 	if option.responseStore != nil {
-		unmarshalJSONErr := json.Unmarshal(bytesContent, &option.responseStore)
+		unmarshalJSONErr := json.Unmarshal(bytesContent, option.responseStore)
 		if unmarshalJSONErr != nil {
 			return bytesContent, responseMessage.String(), unmarshalJSONErr
 		}

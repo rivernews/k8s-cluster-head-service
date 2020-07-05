@@ -154,13 +154,11 @@ func CircleCIWaitTillWorkflowFinish(pipelineID string) (string, error) {
 
 		status, fetchErr = FetchCircleCIBuildStatus(pipelineID)
 
-		var errorMessage string
 		if fetchErr != nil {
-			errorMessage = fetchErr.Error()
+			Logger("WARN", "Polling status: ", status, "; error: ", fetchErr.Error())
 		} else {
-			errorMessage = ""
+			Logger("INFO", "Polling status: ", status)
 		}
-		Logger("INFO", "Polling status: ", status, "; error: ", errorMessage)
 
 		time.Sleep(5 * time.Second)
 		pollingCount++

@@ -3,6 +3,7 @@ package queue
 import (
 	"errors"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/gocraft/work"
@@ -57,31 +58,44 @@ func (c *Context) GuidedSLKS3JobElasticScalingSession(job *work.Job) error {
 		return waitK8sProvisioningError
 	}
 	if k8sProvisioningFinalStatus != "success" {
-		utilities.Logger("ERROR", "K8s provision completed but wasn't successful, final status: ", k8sProvisioningFinalStatus)
+		return utilities.Logger("ERROR", "K8s provision completed but wasn't successful, final status: ", k8sProvisioningFinalStatus)
 	}
 
 	log.Print("K8s provisioning finished: " + k8sProvisioningFinalStatus)
 
-	// TODO: request SLK deployment provision
+	// request SLK deployment provision
 	simulatedSLKDeploymentSlackRequest := types.SlackRequestType{
 		Token:       utilities.RequestFromSlackTokenCredential,
 		TriggerWord: "slk",
 		Text:        "slk",
 	}
 	travisCIRequestProvision, requestSLKDeployError := utilities.TravisCITriggerSLKHelper(simulatedSLKDeploymentSlackRequest)
+	utilities.Logger("INFO", "Requested build for SLK deployment")
 	if requestSLKDeployError != nil {
 		utilities.Logger("ERROR", "Failed to request SLK deployment: ", requestSLKDeployError.Error())
 		return requestSLKDeployError
 	}
 	if travisCIRequestProvision.Request.ID < 0 {
-		utilities.Logger("ERROR", "SLK deployment request ID is invalid: "+travisCIRequestProvision.Request.ID)
+		utilities.Logger("ERROR", "SLK deployment request ID is invalid: ", strconv.Itoa(travisCIRequestProvision.Request.ID))
 		return errors.New("SLK deployment request ID is invalid")
 	}
 	slkDeploymentRequestID := travisCIRequestProvision.Request.ID
-	// TODO: polling till build provisioned
-	// TODO: polling till SLK finish
-	slkDeploymentFinalStatus, slkDeploymentError := utilities.TravisCIWaitTillBuildFinish(string(slkDeploymentRequestID))
-	// TODO: error handing
+	utilities.Logger("INFO", "Requested successfully, request ID: ", strconv.Itoa(slkDeploymentRequestID))
+	slkDeploymentRequestIDAsString := strconv.Itoa(slkDeploymentRequestID)
+	// polling till build provisioned
+	slkDeploymentBuild, slkDeploymentBuildProvisionError := utilities.TravisCIWaitUntilBuildProvisioned(slkDeploymentRequestIDAsString)
+	if slkDeploymentBuildProvisionError != nil {
+		utilities.Logger("ERROR", "SLK deployment build failed to provision: ", slkDeploymentBuildProvisionError.Error())
+		return slkDeploymentBuildProvisionError
+	}
+	if slkDeploymentBuild.ID < 0 || slkDeploymentBuild.State == "" {
+		return utilities.Logger("ERROR", "SLK deployment build data is empty")
+	}
+	slkDeploymentBuildIDAsString := strconv.Itoa(slkDeploymentBuild.ID)
+	utilities.Logger("INFO", "SLK deployment build provisioned by ID: ", slkDeploymentBuildIDAsString)
+	// polling till SLK finish
+	slkDeploymentFinalStatus, slkDeploymentError := utilities.TravisCIWaitTillBuildFinish(slkDeploymentBuildIDAsString)
+	// error handing
 	if slkDeploymentError != nil {
 		utilities.Logger("ERROR", "Build failed to deploy SLK: ", slkDeploymentError.Error())
 		return slkDeploymentError
