@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/types"
-
-	"github.com/gin-gonic/gin"
 )
 
 var travisAPIBaseURL = "https://api.travis-ci.com"
@@ -25,7 +23,7 @@ var travisCIAPIHeaders = map[string][]string{
 /*
 	TravisCITriggerSLKHelper - triggers provisioning SLK deployment
 */
-func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequestType) {
+func TravisCITriggerSLKHelper(parsedSlackRequest types.SlackRequestType) (types.TravisCIRequestProvisionType, error) {
 
 	// build url
 	var urlBuilder strings.Builder
@@ -35,13 +33,16 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 	urlBuilder.WriteString(travisCISLKEncodedProjectSlug)
 	urlBuilder.WriteString("/requests")
 
-	_, fetchedMessage, _ := Fetch(FetchOption{
+	var travisCIRequestProvision types.TravisCIRequestProvisionType
+
+	_, fetchedMessage, fetchErr := Fetch(FetchOption{
 		Method:  "POST",
 		URL:     urlBuilder.String(),
 		Headers: travisCIAPIHeaders,
 		PostData: map[string]string{
 			"branch": "release",
 		},
+		responseStore: &travisCIRequestProvision,
 	})
 
 	var respondSlackMessage strings.Builder
@@ -50,17 +51,17 @@ func TravisCITriggerSLKHelper(c *gin.Context, parsedSlackRequest types.SlackRequ
 
 	SendSlackMessage(respondSlackMessage.String())
 
-	return
+	return travisCIRequestProvision, fetchErr
 }
 
-func TravisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
+/*
+travisCIWaitUntilBuildProvisioned - polls a request status,
+and return the first (latest) build's state as soon as a build is provisioned.
+*/
+func TravisCIWaitUntilBuildProvisioned(requestID string) (types.TravisCIBuild, error) {
 	// wait up to 5 minutes
 	MaxPollingCount := 12 * 5
 	pollingCount := 0
-
-	travisCIRequestObject := types.TravisCIBuildRequestResponseType{
-		Builds: []types.TravisCIBuild{},
-	}
 
 	fetchURL := BuildString(
 		travisAPIBaseURL, "/repo/", travisCISLKEncodedProjectSlug, "/request/", requestID,
@@ -87,6 +88,7 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
 			continue
 		}
 
+		var travisCIRequestObject types.TravisCIBuildRequestResponseType
 		unmarshalJSONErr := json.Unmarshal(responseBytes, &travisCIRequestObject)
 
 		if unmarshalJSONErr != nil {
@@ -94,12 +96,14 @@ func TravisCIWaitUntilBuildProvisioned(requestID string) (string, error) {
 			continue
 		}
 
-		if len(travisCIRequestObject.Builds) > 0 {
-			return travisCIRequestObject.Builds[0].State, nil
+		if travisCIRequestObject.Builds != nil && len(travisCIRequestObject.Builds) > 0 {
+			return travisCIRequestObject.Builds[0], nil
 		}
 	}
 
-	return "", errors.New("Time out while waiting for travis build be provisioned for request ID " + requestID)
+	return types.TravisCIBuild{
+		ID: -1, State: "",
+	}, errors.New("Time out while waiting for travis build be provisioned for request ID " + requestID)
 }
 
 /*
@@ -130,4 +134,31 @@ func TravisCICheckBuildStutus(buildID string) (string, error) {
 	}
 
 	return travisCIBuild.State, nil
+}
+
+func TravisCIWaitTillBuildFinish(buildID string) (string, error) {
+	// poll for up to 20 minutes
+	MaxPollingCount := 12 * 20
+	pollingCount := 0
+
+	for pollingCount <= MaxPollingCount {
+		pollingCount++
+		time.Sleep(5 * time.Second)
+		Logger("INFO", "Polling build ", buildID, " ...")
+
+		state, checkStatusError := TravisCICheckBuildStutus(buildID)
+		if checkStatusError != nil {
+			Logger("WARN", "Got error while polling. State: `", state, "`; error: ", checkStatusError.Error())
+		} else {
+			Logger("INFO", "Polled state: `", state, "`\n")
+		}
+		state = strings.TrimSpace(state)
+
+		// when turn to finalized stage, return the state and stop polling
+		if state == "passed" || state == "failed" || state == "canceled" || state == "errored" {
+			return state, nil
+		}
+	}
+
+	return "", errors.New("Time out while polling TravisCI for build " + buildID)
 }

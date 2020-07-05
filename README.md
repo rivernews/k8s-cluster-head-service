@@ -231,6 +231,18 @@ status	on_hold
 status	canceled
 ```
 
+
+### Travis CI
+
+- Make request at `POST /repo/project-slug/requests/`, [response](https://developer.travis-ci.com/resource/requests#Requests).
+
+- Get request status at `GET /repo/project-slug/request/:id`
+  - We should be able to get the build id here.
+- Get build status at  `GET /build/:id`, of course, this `id` we'll be using build id, not the request id.
+  - We get the `state` here. Possible values are
+    - `passed`
+    - or one of `:created, :received, :started, :passed, :failed, :errored, :canceled`, according to travis CI's [code base](https://github.com/travis-ci/travis-api/blob/master/lib/travis/model/build/states.rb#L25).
+
 # Reference
 
 ## Golang

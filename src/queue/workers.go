@@ -3,6 +3,7 @@ package queue
 import (
 	"errors"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/gocraft/work"
@@ -39,12 +40,12 @@ func (c *Context) GuidedSLKS3JobElasticScalingSession(job *work.Job) error {
 	utilities.Logger("INFO", "Starting GuidedSLKS3JobElasticScalingSession...")
 
 	// request k8s provision
-	simulatedSlackRequest := types.SlackRequestType{
+	simulatedK8sProvisionSlackRequest := types.SlackRequestType{
 		Token:       utilities.RequestFromSlackTokenCredential,
 		TriggerWord: "kkk",
 		Text:        "kkk:m",
 	}
-	k8sProvisioningRequestedPipeline, triggerK8sError := utilities.CircleCITriggerK8sClusterHelper(simulatedSlackRequest)
+	k8sProvisioningRequestedPipeline, triggerK8sError := utilities.CircleCITriggerK8sClusterHelper(simulatedK8sProvisionSlackRequest)
 	if triggerK8sError != nil {
 		utilities.Logger("ERROR", "Failed to trigger K8s provisioning: ", triggerK8sError.Error(), "... job aborted")
 		return triggerK8sError
@@ -57,21 +58,53 @@ func (c *Context) GuidedSLKS3JobElasticScalingSession(job *work.Job) error {
 		return waitK8sProvisioningError
 	}
 	if k8sProvisioningFinalStatus != "success" {
-		utilities.Logger("ERROR", "K8s provision completed but wasn't successful, final status: ", k8sProvisioningFinalStatus)
+		return utilities.Logger("ERROR", "K8s provision completed but wasn't successful, final status: ", k8sProvisioningFinalStatus)
 	}
 
 	log.Print("K8s provisioning finished: " + k8sProvisioningFinalStatus)
 
-	// TODO: request SLK deployment provision
-	// slkDeploymentRequestID := "123"
-	// TODO: polling till build provisioned
-	// TODO: polling till SLK finish
-	// slkDeploymentFinalStatus, slkDeploymentError := utilities.TravisCIWaitUntilBuildProvisioned(slkDeploymentRequestID)
-	// TODO: error handing
-	// if slkDeploymentError != nil {
-	// 	return slkDeploymentError
-	// }
-	// log.Print("SLK deploymeny finished: " + slkDeploymentFinalStatus)
+	// request SLK deployment provision
+	simulatedSLKDeploymentSlackRequest := types.SlackRequestType{
+		Token:       utilities.RequestFromSlackTokenCredential,
+		TriggerWord: "slk",
+		Text:        "slk",
+	}
+	travisCIRequestProvision, requestSLKDeployError := utilities.TravisCITriggerSLKHelper(simulatedSLKDeploymentSlackRequest)
+	utilities.Logger("INFO", "Requested build for SLK deployment")
+	if requestSLKDeployError != nil {
+		utilities.Logger("ERROR", "Failed to request SLK deployment: ", requestSLKDeployError.Error())
+		return requestSLKDeployError
+	}
+	if travisCIRequestProvision.Request.ID < 0 {
+		utilities.Logger("ERROR", "SLK deployment request ID is invalid: ", strconv.Itoa(travisCIRequestProvision.Request.ID))
+		return errors.New("SLK deployment request ID is invalid")
+	}
+	slkDeploymentRequestID := travisCIRequestProvision.Request.ID
+	utilities.Logger("INFO", "Requested successfully, request ID: ", strconv.Itoa(slkDeploymentRequestID))
+	slkDeploymentRequestIDAsString := strconv.Itoa(slkDeploymentRequestID)
+	// polling till build provisioned
+	slkDeploymentBuild, slkDeploymentBuildProvisionError := utilities.TravisCIWaitUntilBuildProvisioned(slkDeploymentRequestIDAsString)
+	if slkDeploymentBuildProvisionError != nil {
+		utilities.Logger("ERROR", "SLK deployment build failed to provision: ", slkDeploymentBuildProvisionError.Error())
+		return slkDeploymentBuildProvisionError
+	}
+	if slkDeploymentBuild.ID < 0 || slkDeploymentBuild.State == "" {
+		return utilities.Logger("ERROR", "SLK deployment build data is empty")
+	}
+	slkDeploymentBuildIDAsString := strconv.Itoa(slkDeploymentBuild.ID)
+	utilities.Logger("INFO", "SLK deployment build provisioned by ID: ", slkDeploymentBuildIDAsString)
+	// polling till SLK finish
+	slkDeploymentFinalStatus, slkDeploymentError := utilities.TravisCIWaitTillBuildFinish(slkDeploymentBuildIDAsString)
+	// error handing
+	if slkDeploymentError != nil {
+		utilities.Logger("ERROR", "Build failed to deploy SLK: ", slkDeploymentError.Error())
+		return slkDeploymentError
+	}
+	if slkDeploymentFinalStatus != "passed" {
+		utilities.Logger("ERROR", "Build for SLK finalized but wasn't successful: ", slkDeploymentFinalStatus)
+		return errors.New("Build for SLK finalized but wasn't successful")
+	}
+	utilities.Logger("INFO", "SLK deploymeny finished: ", slkDeploymentFinalStatus)
 
 	// TODO: request s3 job
 	// TODO: polling till s3 finish
@@ -81,7 +114,7 @@ func (c *Context) GuidedSLKS3JobElasticScalingSession(job *work.Job) error {
 	// TODO: polling
 	// TODO: error handling
 
-	utilities.Logger("DEBUG", "Job finished w/o error")
+	utilities.Logger("DEBUG", "GuideJob finished w/o error")
 
 	return nil
 }

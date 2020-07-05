@@ -33,7 +33,7 @@ func SlackCommandController(c *gin.Context) {
 		if parsedSlackRequest.TriggerWord == "ppp" {
 			// TODO: poll job status
 		} else if parsedSlackRequest.TriggerWord == "slk" {
-			utilities.TravisCITriggerSLKHelper(c, parsedSlackRequest)
+			utilities.TravisCITriggerSLKHelper(parsedSlackRequest)
 		} else {
 			utilities.CircleCITriggerK8sClusterHelper(parsedSlackRequest)
 		}
