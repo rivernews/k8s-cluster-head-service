@@ -13,7 +13,7 @@ func getSLKAPIBaseURL() string {
 		return "http://host.docker.internal:8080"
 	}
 
-	return "http://slack.api.shaungc.com"
+	return "https://slack.api.shaungc.com"
 }
 
 func SLKCheckS3JobStatus() (types.SLKS3JobResponseType, error) {
