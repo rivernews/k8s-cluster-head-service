@@ -9,6 +9,10 @@ var RequestFromSlackTokenCredential, RequestFromSlackTokenCredentialExists = os.
 var SendSlackURL, SendSlackURLExists = os.LookupEnv("SLACK_INCOMING_URL")
 var CircleCiToken, CircleCiTokenExists = os.LookupEnv("CIRCLECI_TOKEN")
 var TravisCIToken, TravisCITokenExists = os.LookupEnv("TRAVIS_TOKEN")
+
+// used for authenticating with SLK
+var SLKSlackTokenOutgoingLaunch, SLKSlackTokenOutgoingLaunchExists = os.LookupEnv("SLK_SLACK_TOKEN_OUTGOING_LAUNCH")
+
 var Debug = getBoolEnvVarHelper("DEBUG")
 
 var LargeDroplet = "s-4vcpu-8gb"
