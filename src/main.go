@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	utilities.Logger("INFO", "Deployment version with enqueuer in web controller")
 	if !checkAppConfigurationOK() {
 		return
 	}
