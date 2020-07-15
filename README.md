@@ -13,7 +13,7 @@ Head service for scaling up and down k8s cluster, and managing services and rout
 1. The app can be accessed at `https://k8s-cluster-head-service.herokuapp.com/`
 
 ## Job queue
-- To inspect job queues, run `workwebui -redis="$REDISCLOUD_URL" -ns=my_app_namespace`, then navigate to brower `http://localhost:5040`.
+- To inspect job queues, run `workwebui -redis="$REDISCLOUD_URL" -ns=my_app_namespace`, then navigate to browser `http://localhost:5040`. This works for production as well, as long as you have the latest redis credentials from Heroku.
   - If you don't have the CLI installed yet, [follow instruction](https://github.com/gocraft/work#run-the-web-ui) and run `go get github.com/gocraft/work/cmd/workwebui && go install github.com/gocraft/work/cmd/workwebui`.
   - ⚠️ You'll have to remove the username part from the redis URL, looks like it's not supported and will cause AUTh argument number error. Basically just [following this example](https://github.com/gocraft/work/issues/114#issuecomment-476822085).
 
@@ -22,6 +22,16 @@ Head service for scaling up and down k8s cluster, and managing services and rout
 We're using [Testify](https://github.com/stretchr/testify) the test framework.
 - `cd` into the directory where the test file resides
 - Run `go test`
+
+How to simulate slack command:
+```
+curl -XPOST \
+  -F "token=${REQUEST_FROM_SLACK_TOKEN}" \
+  -F "text=guide" \
+  -F "trigger_word=guide" \
+  -H 'Accept: application/json' \
+  http://localhost:3010/slack/provision
+```
 
 ## Manual CI/CD API call
 
@@ -242,6 +252,37 @@ status	canceled
   - We get the `state` here. Possible values are
     - `passed`
     - or one of `:created, :received, :started, :passed, :failed, :errored, :canceled`, according to travis CI's [code base](https://github.com/travis-ci/travis-api/blob/master/lib/travis/model/build/states.rb#L25).
+
+
+## Communicating with SLK
+
+### S3 job endpoint
+
+`POST /queues/s3-orgs-job`
+
+Authenticate by `SLACK_TOKEN_OUTGOING_LAUNCH`, pass in `token` by either querystring or POST payload.
+
+If s3 job trigger success, will response:
+```json
+{"id":"1","name":"s3OrgsJobProcessor","data":{},"opts":{"attempts":1,"delay":0,"timestamp":1592276788520},"progress":0,"delay":0,"timestamp":1592276788520,"attemptsMade":0,"stacktrace":[],"returnvalue":null,"finishedOn":null,"processedOn":null, "status":"running"}
+```
+
+Otherwise
+```json
+{"error": "errorMessage", "progress": 14.5, "status":"running", "jobError": "reason"}
+```
+
+Status enum: `running`, `failed`, `completed`.
+
+Make sure from the Golang side, we set the following headers, otherwise SLK cannot parse json on it correctly and your `PostData` will not be recognized by SLK (can't even pass SLK's auth).
+
+```go
+Headers: map[string][]string{
+  "Content-Type": {"application/json"},
+  "Accept":       {"application/json"},
+},
+```
+
 
 # Reference
 
