@@ -63,7 +63,13 @@ func Fetch(option FetchOption) ([]byte, string, error) {
 	var responseMessage strings.Builder
 	if !option.DisableHumanMessage {
 		responseMessage.WriteString("Response:\n```\n")
-		responseMessage.WriteString(string(bytesContent))
+
+		if bytesContent != nil {
+			responseMessage.WriteString(string(bytesContent))
+		} else {
+			responseMessage.WriteString("Empty content")
+		}
+
 		responseMessage.WriteString("\n```\nAny error:\n```\n")
 		if fetchErr != nil {
 			responseMessage.WriteString("🔴 ")
@@ -82,6 +88,7 @@ func Fetch(option FetchOption) ([]byte, string, error) {
 	if option.responseStore != nil {
 		unmarshalJSONErr := json.Unmarshal(bytesContent, option.responseStore)
 		if unmarshalJSONErr != nil {
+			Logger("INFO", "Failed to parse JSON response=", string(bytesContent))
 			return bytesContent, responseMessage.String(), unmarshalJSONErr
 		}
 	}
