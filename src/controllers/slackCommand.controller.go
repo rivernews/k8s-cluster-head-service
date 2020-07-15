@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/rivernews/k8s-cluster-head-service/v2/src/queue"
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/types"
 	"github.com/rivernews/k8s-cluster-head-service/v2/src/utilities"
 
@@ -29,14 +30,26 @@ func SlackCommandController(c *gin.Context) {
 	}
 
 	if utilities.RequestFromSlackTokenCredential == parsedSlackRequest.Token {
-		// TODO: cancel job
-		if parsedSlackRequest.TriggerWord == "ppp" {
-			// TODO: poll job status
-		} else if parsedSlackRequest.TriggerWord == "slk" {
+		if parsedSlackRequest.TriggerWord == "slk" {
 			utilities.TravisCITriggerSLKHelper(parsedSlackRequest)
-		} else {
+		} else if parsedSlackRequest.TriggerWord == "kkk" || parsedSlackRequest.TriggerWord == "ddd" {
 			utilities.CircleCITriggerK8sClusterHelper(parsedSlackRequest)
+		} else if parsedSlackRequest.TriggerWord == "guide" {
+			queue.HandleJobQueueRequest()
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"result": utilities.BuildString(
+					"no such command: ",
+					parsedSlackRequest.TriggerWord,
+				),
+			})
+			return
 		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"result": "OK",
+		})
+		return
 	}
 
 	c.JSON(http.StatusBadRequest, gin.H{

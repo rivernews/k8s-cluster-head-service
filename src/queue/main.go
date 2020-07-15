@@ -13,6 +13,7 @@ import (
 
 // https://github.com/gocraft/work
 func TestJobQueue() {
+	utilities.Logger("INFO", "Starting up job queues...")
 	defer utilities.RedisPool.Close()
 
 	// flushdb
@@ -52,7 +53,7 @@ func TestJobQueue() {
 	// enqueue
 
 	// Make an enqueuer with a particular namespace
-	var enqueuer = work.NewEnqueuer("my_app_namespace", utilities.RedisPool)
+	// var enqueuer = work.NewEnqueuer("my_app_namespace", utilities.RedisPool)
 
 	// worker pool
 
@@ -86,7 +87,7 @@ func TestJobQueue() {
 	// for i := 1; i < 5; i++ {
 	// 	enqueuer.Enqueue("send_email", work.Q{"address": "test@example.com", "subject": "hello world", "customer_id": 4})
 	// }
-	enqueuer.Enqueue("guided_k8s_s3_elastic_session", work.Q{})
+	// enqueuer.Enqueue("guided_k8s_s3_elastic_session", work.Q{})
 
 	// Wait for a signal to quit:
 	signalChan := make(chan os.Signal, 1)

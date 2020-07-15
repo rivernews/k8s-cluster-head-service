@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	utilities.Logger("INFO", "Deployment version with enqueuer in web controller")
 	if !checkAppConfigurationOK() {
 		return
 	}
@@ -24,7 +25,7 @@ func main() {
 
 	// job queue
 
-	queue.TestJobQueue()
+	go queue.TestJobQueue()
 
 	// web
 
