@@ -142,7 +142,9 @@ func FetchCircleCIBuildStatus(pipelineID string) (string, error) {
 // CircleCIWaitTillWorkflowFinish - wait till the build finalizes,
 // when finalized, return the final status string
 func CircleCIWaitTillWorkflowFinish(pipelineID string) (string, error) {
-	MaxPollingCount := 12 * 20
+	// default wait for an hour
+	// sometimes CircleCI will get stuck creating workflow
+	MaxPollingCount := 12 * 60
 	pollingCount := 0
 
 	// while look polling
