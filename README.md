@@ -7,7 +7,7 @@ Head service for scaling up and down k8s cluster, and managing services and rout
 
 ## How to deploy
 1. Install Heroku CLI, and run `heroku login`
-1. `heroku create k8s-cluster-head-service --manifest` ([Heroku doc](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml#creating-your-app-from-setup)), you'll get `https://k8s-cluster-head-service.herokuapp.com/ | https://git.heroku.com/k8s-cluster-head-service.git`
+1. If this is not the first time you deploy, just skip to the below step of pushing to heroky remote. Run `heroku create k8s-cluster-head-service --manifest` ([Heroku doc](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml#creating-your-app-from-setup)), you'll get `https://k8s-cluster-head-service.herokuapp.com/ | https://git.heroku.com/k8s-cluster-head-service.git`
 1. Commit git changes, including `heroku.yml`
 1. Push to heroku remote `git push heroku master`
 1. The app can be accessed at `https://k8s-cluster-head-service.herokuapp.com/`
