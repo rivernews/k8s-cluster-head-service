@@ -24,7 +24,7 @@ func main() {
 
 	// job queue
 
-	queue.TestJobQueue()
+	go queue.TestJobQueue()
 
 	// web
 
