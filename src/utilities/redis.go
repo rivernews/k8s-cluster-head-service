@@ -37,7 +37,8 @@ var RedisPool = &redis.Pool{
 // to accomodate flexible use in redis client
 // https://github.com/go-redis/redis/issues/129#issuecomment-118889469
 func parseRedisURL() (string, string) {
-	redisURL, redisURLParseError := url.Parse(RedisURL)
+	redisURLString, _ := GetRedisURL()
+	redisURL, redisURLParseError := url.Parse(redisURLString)
 	if redisURLParseError != nil {
 		log.Fatalln("Cannot parse redis URL")
 	}
