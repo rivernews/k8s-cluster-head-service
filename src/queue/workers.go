@@ -22,6 +22,8 @@ func (c *Context) SendEmail(job *work.Job) error {
 
 	log.Println("Processing job " + job.ID + "...")
 
+	job.Checkin("Checking in..!")
+
 	time.Sleep(1 * time.Second)
 
 	// Go ahead and send the email...
