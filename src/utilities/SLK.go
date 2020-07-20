@@ -61,7 +61,7 @@ func SLKWaitTillS3JobFinish() (types.SLKS3JobResponseType, error) {
 		if checkStatusError != nil {
 			Logger("WARN", "Got error while polling s3 job. Error: ", checkStatusError.Error())
 		} else {
-			Logger("INFO", "Polled progress=", strconv.Itoa(s3JobMeta.Progress), "; status=", s3JobMeta.Status, "; error=", s3JobMeta.Error, "; id=", s3JobMeta.ID, "; attempts=", strconv.Itoa(s3JobMeta.Attempts), "\n")
+			Logger("INFO", "Polled progress=", strconv.FormatFloat(s3JobMeta.Progress, 'f', 2, 64), "; status=", s3JobMeta.Status, "; error=", s3JobMeta.Error, "; id=", s3JobMeta.ID, "; attempts=", strconv.Itoa(s3JobMeta.Attempts), "\n")
 		}
 
 		// terminate condition
