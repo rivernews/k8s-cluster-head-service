@@ -33,7 +33,7 @@ func main() {
 
 	// Default page
 	router.GET("/", func(c *gin.Context) {
-		utilities.SendSlackMessage("k8s head service: home page accessed.")
+		utilities.Logger("INFO", "k8s head service: home page accessed.")
 		c.JSON(http.StatusOK, gin.H{
 			"message": "ok",
 		})
