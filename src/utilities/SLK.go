@@ -26,16 +26,14 @@ func SLKCheckS3JobStatus() (types.SLKS3JobResponseType, error) {
 	_, _, fetchErr := Fetch(FetchOption{
 		Method: "POST",
 		URL:    fetchURL,
-		// QueryParams: map[string]string{
-		// 	"token": SLKSlackTokenOutgoingLaunch,
-		// },
 		Headers: map[string][]string{
 			"Content-Type": {"application/json"},
 			"Accept":       {"application/json"},
 		},
 		PostData: map[string]string{
-			"token":     SLKSlackTokenOutgoingLaunch,
-			"singleton": "true",
+			"token":                   SLKSlackTokenOutgoingLaunch,
+			"singleton":               "true",
+			"keepAliveK8sHeadService": "true",
 		},
 		responseStore: &s3JobResponse,
 	})
