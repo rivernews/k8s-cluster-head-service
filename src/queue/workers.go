@@ -43,13 +43,14 @@ func (c *Context) GuidedSLKS3JobElasticScalingSession(job *work.Job) error {
 	var checkInMessage string
 	checkInMessage = "Starting guide job..."
 	job.Checkin(checkInMessage)
+	utilities.SendSlackMessage(checkInMessage)
 
 	// request k8s provision
 
 	simulatedK8sProvisionSlackRequest := types.SlackRequestType{
 		Token:       utilities.RequestFromSlackTokenCredential,
 		TriggerWord: "kkk",
-		Text:        "kkk:m",
+		Text:        "kkk",
 	}
 	k8sProvisioningRequestedPipeline, triggerK8sError := utilities.CircleCITriggerK8sClusterHelper(simulatedK8sProvisionSlackRequest)
 	if triggerK8sError != nil {
