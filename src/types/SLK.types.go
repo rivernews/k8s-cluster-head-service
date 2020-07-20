@@ -1,8 +1,8 @@
 package types
 
 type SLKS3JobResponseType struct {
-	Progress int    `json:"progress"`
-	Status   string `json:"status"`
+	Progress float64 `json:"progress"`
+	Status   string  `json:"status"`
 
 	// if successfully provisioned new s3 job
 	ID       string `json:"id"`
