@@ -19,17 +19,14 @@ var LargeDroplet = "s-4vcpu-8gb"
 var MediumDroplet = "s-2vcpu-4gb"
 var SmallDroplet = "s-1vcpu-3gb"
 
-func GetRedisURL() (string, bool) {
-	var redisURL, redisURLExists = os.LookupEnv("REDISCLOUD_URL")
-	if redisURLExists {
-		if Debug {
-			redisURL = BuildString(redisURL, "/0")
-		} else {
-			redisURL = BuildString(redisURL, "/1")
-		}
-	}
+var RedisURL, RedisURLExists = os.LookupEnv("REDISCLOUD_URL")
 
-	return redisURL, redisURLExists
+func GetRedisDB() int {
+	if Debug {
+		return 0
+	} else {
+		return 1
+	}
 }
 
 var LogLevelTypes = map[string]int{

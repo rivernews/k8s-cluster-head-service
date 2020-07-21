@@ -96,8 +96,7 @@ func checkAppConfigurationOK() bool {
 		return false
 	}
 
-	_, redisURLExists := utilities.GetRedisURL()
-	if !redisURLExists {
+	if !utilities.RedisURLExists {
 		log.Fatalln("Redis URL is not configured")
 		return false
 	}
