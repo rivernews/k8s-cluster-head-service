@@ -19,14 +19,24 @@ var LargeDroplet = "s-4vcpu-8gb"
 var MediumDroplet = "s-2vcpu-4gb"
 var SmallDroplet = "s-1vcpu-3gb"
 
-var RedisURL, RedisURLExists = os.LookupEnv("REDISCLOUD_URL")
+func GetRedisURL() (string, bool) {
+	var redisURL string
+	redisURLExists := false
+	if Debug {
+		// provides 20 connections, 25MB and ? db
+		// https://elements.heroku.com/addons/heroku-redis
+		redisURL, redisURLExists = os.LookupEnv("REDIS_URL")
+	} else {
+		// provides 30 connections, 30MB and 1 db
+		// https://elements.heroku.com/addons/rediscloud
+		redisURL, redisURLExists = os.LookupEnv("REDISCLOUD_URL")
+	}
+
+	return redisURL, redisURLExists
+}
 
 func GetRedisDB() int {
-	if Debug {
-		return 0
-	} else {
-		return 1
-	}
+	return 0
 }
 
 var LogLevelTypes = map[string]int{
