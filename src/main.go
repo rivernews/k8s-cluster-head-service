@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	utilities.Logger("INFO", "Deployment version with enqueuer in web controller")
 	if !checkAppConfigurationOK() {
 		return
 	}
@@ -24,7 +25,7 @@ func main() {
 
 	// job queue
 
-	queue.TestJobQueue()
+	go queue.TestJobQueue()
 
 	// web
 
@@ -32,7 +33,7 @@ func main() {
 
 	// Default page
 	router.GET("/", func(c *gin.Context) {
-		utilities.SendSlackMessage("haha")
+		utilities.Logger("INFO", "k8s head service: home page accessed.")
 		c.JSON(http.StatusOK, gin.H{
 			"message": "ok",
 		})
@@ -95,7 +96,8 @@ func checkAppConfigurationOK() bool {
 		return false
 	}
 
-	if !utilities.RedisURLExists {
+	_, redisURLExists := utilities.GetRedisURL()
+	if !redisURLExists {
 		log.Fatalln("Redis URL is not configured")
 		return false
 	}

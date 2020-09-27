@@ -1,6 +1,7 @@
 package utilities
 
 import (
+	"errors"
 	"log"
 	"strings"
 )
@@ -18,7 +19,7 @@ func BuildString(stringList ...string) string {
 	return stringBuilder.String()
 }
 
-func Logger(logLevel string, stringList ...string) {
+func Logger(logLevel string, stringList ...string) error {
 	value, exist := LogLevelTypes[logLevel]
 	if exist && GetLogLevelValue() >= value {
 		var prefix string
@@ -38,6 +39,13 @@ func Logger(logLevel string, stringList ...string) {
 		for _, v := range stringList {
 			logBuilder.WriteString(v)
 		}
+
 		log.Println(logBuilder.String())
+		if value == LogLevelTypes["ERROR"] {
+			SendSlackMessage(logBuilder.String())
+			return errors.New(logBuilder.String())
+		}
 	}
+
+	return nil
 }

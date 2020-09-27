@@ -17,6 +17,7 @@ type FetchOption struct {
 	URL                 string
 	Method              string
 	DisableHumanMessage bool
+	responseStore       interface{}
 }
 
 // Fetch - convenient method to make request with querystring and post data
@@ -62,7 +63,13 @@ func Fetch(option FetchOption) ([]byte, string, error) {
 	var responseMessage strings.Builder
 	if !option.DisableHumanMessage {
 		responseMessage.WriteString("Response:\n```\n")
-		responseMessage.WriteString(string(bytesContent))
+
+		if bytesContent != nil {
+			responseMessage.WriteString(string(bytesContent))
+		} else {
+			responseMessage.WriteString("Empty content")
+		}
+
 		responseMessage.WriteString("\n```\nAny error:\n```\n")
 		if fetchErr != nil {
 			responseMessage.WriteString("🔴 ")
@@ -73,5 +80,18 @@ func Fetch(option FetchOption) ([]byte, string, error) {
 		responseMessage.WriteString("\n```\n")
 	}
 
-	return bytesContent, responseMessage.String(), fetchErr
+	if fetchErr != nil {
+		return bytesContent, responseMessage.String(), fetchErr
+	}
+
+	// parse response into struct if an interface is provided
+	if option.responseStore != nil {
+		unmarshalJSONErr := json.Unmarshal(bytesContent, option.responseStore)
+		if unmarshalJSONErr != nil {
+			Logger("INFO", "Failed to parse JSON response=", string(bytesContent))
+			return bytesContent, responseMessage.String(), unmarshalJSONErr
+		}
+	}
+
+	return bytesContent, responseMessage.String(), nil
 }
