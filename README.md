@@ -1,6 +1,16 @@
 # k8s-cluster-head-service
 Head service for scaling up and down k8s cluster, and managing services and routine on the cluster. This project serves as a way to get myself familiar with golang.
 
+## How to use with slack
+It's better to access the app to warm it up first on Heroku: `https://k8s-cluster-head-service.herokuapp.com/`, then use one of these slack commands:
+1. `ddd` destroy the entire Kubernetes stack
+2. `kkk[:m|s|l]` provision the Kubernetes cluster on a large droplet by default. Note that the node has to run a Kubernetes cluster, so 1CPU-1GBRAM won't work.
+    - `s`: `s-1vcpu-3gb`, $15/month
+    - `m`: `s-2vcpu-4gb`, $20/month
+    - `l`: `s-4vcpu-8gb`, $40/month
+3. `slk`: deploy slack service on the Kubernetes cluster
+4. `guide`: automate from k8 cluster provisioning, deploy slack service on k8s, to s3 job processing, and destroy k8s cluster at the end.
+
 ## How to run locally
 1. `go run src/server.go`, or after `air` is configured, run `air`.
 1. Open browser at `http://0.0.0.0:3010`
